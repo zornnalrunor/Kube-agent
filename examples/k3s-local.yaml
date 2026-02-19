@@ -1,0 +1,46 @@
+# Example K3s Local Configuration
+platform: k3s
+environment: development
+
+# Number of nodes
+nodes: 3
+
+# Resources per node
+resources:
+  memory: 4Gi
+  cpu: 2
+  disk_size: 50
+
+# Networking
+networking:
+  pod_cidr: 10.244.0.0/16
+  service_cidr: 10.96.0.0/16
+
+# Monitoring configuration
+monitoring:
+  enabled: true
+  retention: 7d
+  alerting: false
+  dashboards:
+    - kubernetes-cluster
+    - node-exporter
+    - pod-monitoring
+
+# Security
+security:
+  rbac_enabled: true
+  network_policies: false
+  pod_security_policy: false
+
+# Addons
+addons:
+  metrics_server: true
+  ingress_nginx: true
+  cert_manager: false
+
+# K3s specific configuration
+k3s_config:
+  disable:
+    - traefik  # We use nginx-ingress instead
+  write_kubeconfig_mode: "644"
+  data_dir: /var/lib/rancher/k3s

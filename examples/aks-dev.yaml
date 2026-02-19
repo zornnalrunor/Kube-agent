@@ -1,0 +1,75 @@
+# Example AKS Development Configuration
+platform: aks
+environment: development
+
+# Azure Location
+location: eastus
+
+# Kubernetes version
+kubernetes_version: "1.28"
+
+# Node pools
+node_pools:
+  - name: default
+    vm_size: Standard_B2ms
+    node_count: 2
+    min_count: 1
+    max_count: 5
+    enable_auto_scaling: true
+    os_disk_size_gb: 50
+    labels:
+      role: general
+
+# Networking
+networking:
+  network_plugin: azure  # or 'kubenet'
+  pod_cidr: 10.244.0.0/16
+  service_cidr: 10.96.0.0/16
+  dns_service_ip: 10.96.0.10
+  docker_bridge_cidr: 172.17.0.1/16
+
+# Monitoring configuration
+monitoring:
+  enabled: true
+  retention: 15d
+  alerting: false
+  dashboards:
+    - kubernetes-cluster
+    - node-exporter
+    - pod-monitoring
+
+# Security
+security:
+  rbac_enabled: true
+  network_policies: true
+  pod_security_policy: false
+  azure_policy: false
+
+# Addons
+addons:
+  metrics_server: true
+  ingress_nginx: true
+  cert_manager: true
+  azure_monitor: true
+
+# AKS specific configuration
+aks_config:
+  sku_tier: Free  # or 'Standard' for production
+  
+  # Identity
+  identity_type: SystemAssigned
+  
+  # Network profile
+  load_balancer_sku: standard
+  outbound_type: loadBalancer
+  
+  # Add-ons
+  http_application_routing: false
+  oms_agent: true  # Azure Monitor
+  kube_dashboard: false
+
+# Tags
+tags:
+  Environment: development
+  ManagedBy: terraform-k8s-agent
+  Project: infrastructure
