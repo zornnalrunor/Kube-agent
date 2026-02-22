@@ -112,8 +112,19 @@ class MonitoringAgent(BaseAgent):
                     self.log_success("Alerts configured")
             
             # URLs d'accès
-            grafana_url = "http://localhost:3000"
-            prometheus_url = "http://localhost:9090"
+            if self.config.deployment_mode.value == "real":
+                # En mode réel, utiliser les NodePorts
+                grafana_url = "http://localhost:30300"
+                prometheus_url = "http://localhost:30090"
+                access_instructions = (
+                    f"Grafana: {grafana_url} (admin/admin), "
+                    f"Prometheus: {prometheus_url}"
+                )
+            else:
+                # En mode démo, URLs fictives
+                grafana_url = "http://localhost:3000"
+                prometheus_url = "http://localhost:9090"
+                access_instructions = f"Grafana: {grafana_url}"
             
             return AgentOutput(
                 agent_name=self.agent_name,
@@ -125,7 +136,7 @@ class MonitoringAgent(BaseAgent):
                     "grafana_url": grafana_url,
                     "prometheus_url": prometheus_url,
                     "dashboards": dashboards if grafana_deployed else [],
-                    "summary": f"Monitoring stack deployed (Grafana: {grafana_url})"
+                    "summary": f"Monitoring stack deployed ({access_instructions})"
                 },
                 errors=errors,
                 logs=logs,
@@ -184,52 +195,113 @@ class MonitoringAgent(BaseAgent):
         return manifests_dir
     
     def _generate_prometheus_manifest(self, config: Dict[str, Any]) -> Dict[str, Any]:
-        """Génère le manifest Prometheus"""
+        """Génère le manifest Prometheus avec Deployment"""
         retention = config.get("retention", "15d")
         
         return {
             "apiVersion": "v1",
-            "kind": "ConfigMap",
-            "metadata": {
-                "name": "prometheus-config",
-                "namespace": "monitoring"
-            },
-            "data": {
-                "prometheus.yml": f"""
-global:
+            "kind": "List",
+            "items": [
+                # ConfigMap
+                {
+                    "apiVersion": "v1",
+                    "kind": "ConfigMap",
+                    "metadata": {
+                        "name": "prometheus-config",
+                        "namespace": "monitoring"
+                    },
+                    "data": {
+                        "prometheus.yml": f"""global:
   scrape_interval: 15s
   evaluation_interval: 15s
-  external_labels:
-    cluster: 'terraform-agent-cluster'
-
-storage:
-  tsdb:
-    retention.time: {retention}
 
 scrape_configs:
   - job_name: 'kubernetes-nodes'
     kubernetes_sd_configs:
       - role: node
-    
-  - job_name: 'kubernetes-pods'
-    kubernetes_sd_configs:
-      - role: pod
 """
-            }
+                    }
+                },
+                # Deployment
+                {
+                    "apiVersion": "apps/v1",
+                    "kind": "Deployment",
+                    "metadata": {
+                        "name": "prometheus",
+                        "namespace": "monitoring"
+                    },
+                    "spec": {
+                        "replicas": 1,
+                        "selector": {
+                            "matchLabels": {"app": "prometheus"}
+                        },
+                        "template": {
+                            "metadata": {
+                                "labels": {"app": "prometheus"}
+                            },
+                            "spec": {
+                                "containers": [
+                                    {
+                                        "name": "prometheus",
+                                        "image": "prom/prometheus:latest",
+                                        "ports": [{"containerPort": 9090}],
+                                        "volumeMounts": [
+                                            {
+                                                "name": "config",
+                                                "mountPath": "/etc/prometheus"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "volumes": [
+                                    {
+                                        "name": "config",
+                                        "configMap": {"name": "prometheus-config"}
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                # Service
+                {
+                    "apiVersion": "v1",
+                    "kind": "Service",
+                    "metadata": {
+                        "name": "prometheus",
+                        "namespace": "monitoring"
+                    },
+                    "spec": {
+                        "type": "NodePort",
+                        "ports": [
+                            {
+                                "port": 9090,
+                                "targetPort": 9090,
+                                "nodePort": 30090
+                            }
+                        ],
+                        "selector": {"app": "prometheus"}
+                    }
+                }
+            ]
         }
     
     def _generate_grafana_manifest(self, config: Dict[str, Any]) -> Dict[str, Any]:
-        """Génère le manifest Grafana"""
+        """Génère le manifest Grafana avec Deployment"""
         return {
             "apiVersion": "v1",
-            "kind": "ConfigMap",
-            "metadata": {
-                "name": "grafana-datasources",
-                "namespace": "monitoring"
-            },
-            "data": {
-                "datasources.yaml": """
-apiVersion: 1
+            "kind": "List",
+            "items": [
+                # ConfigMap
+                {
+                    "apiVersion": "v1",
+                    "kind": "ConfigMap",
+                    "metadata": {
+                        "name": "grafana-datasources",
+                        "namespace": "monitoring"
+                    },
+                    "data": {
+                        "datasources.yaml": """apiVersion: 1
 datasources:
   - name: Prometheus
     type: prometheus
@@ -237,29 +309,84 @@ datasources:
     url: http://prometheus:9090
     isDefault: true
 """
-            }
-        }
-    
-    def _generate_service_monitors(self) -> Dict[str, Any]:
-        """Génère les ServiceMonitors"""
-        return {
-            "apiVersion": "v1",
-            "kind": "List",
-            "items": [
+                    }
+                },
+                # Deployment
+                {
+                    "apiVersion": "apps/v1",
+                    "kind": "Deployment",
+                    "metadata": {
+                        "name": "grafana",
+                        "namespace": "monitoring"
+                    },
+                    "spec": {
+                        "replicas": 1,
+                        "selector": {
+                            "matchLabels": {"app": "grafana"}
+                        },
+                        "template": {
+                            "metadata": {
+                                "labels": {"app": "grafana"}
+                            },
+                            "spec": {
+                                "containers": [
+                                    {
+                                        "name": "grafana",
+                                        "image": "grafana/grafana:latest",
+                                        "ports": [{"containerPort": 3000}],
+                                        "env": [
+                                            {
+                                                "name": "GF_SECURITY_ADMIN_PASSWORD",
+                                                "value": "admin"
+                                            }
+                                        ],
+                                        "volumeMounts": [
+                                            {
+                                                "name": "datasources",
+                                                "mountPath": "/etc/grafana/provisioning/datasources"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "volumes": [
+                                    {
+                                        "name": "datasources",
+                                        "configMap": {"name": "grafana-datasources"}
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                # Service
                 {
                     "apiVersion": "v1",
                     "kind": "Service",
                     "metadata": {
-                        "name": "prometheus",
-                        "namespace": "monitoring",
-                        "labels": {"app": "prometheus"}
+                        "name": "grafana",
+                        "namespace": "monitoring"
                     },
                     "spec": {
-                        "ports": [{"port": 9090, "name": "web"}],
-                        "selector": {"app": "prometheus"}
+                        "type": "NodePort",
+                        "ports": [
+                            {
+                                "port": 3000,
+                                "targetPort": 3000,
+                                "nodePort": 30300
+                            }
+                        ],
+                        "selector": {"app": "grafana"}
                     }
                 }
             ]
+        }
+    
+    def _generate_service_monitors(self) -> Dict[str, Any]:
+        """Génère les ServiceMonitors (optionnel - pour l'instant vide)"""
+        return {
+            "apiVersion": "v1",
+            "kind": "List",
+            "items": []
         }
     
     def _save_manifest(self, path: Path, manifest: Dict[str, Any]) -> None:
@@ -287,31 +414,55 @@ datasources:
         # Mode réel : vrai déploiement avec kubectl
         try:
             import subprocess
+            import os
+            
+            # Prepare environment with kubeconfig
+            env = os.environ.copy()
+            if kubeconfig_path:
+                env["KUBECONFIG"] = kubeconfig_path
+                self.log(f"Using kubeconfig: {kubeconfig_path}")
+            else:
+                self.log_error("No kubeconfig provided, using default")
             
             # Créér le namespace monitoring
-            subprocess.run(
-                ["kubectl", "create", "namespace", "monitoring", "--dry-run=client", "-o", "yaml"],
-                check=False,
-                capture_output=True
-            )
-            subprocess.run(
+            namespace_yaml = """apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+"""
+            result = subprocess.run(
                 ["kubectl", "apply", "-f", "-"],
-                input=b"apiVersion: v1\\nkind: Namespace\\nmetadata:\\n  name: monitoring",
-                check=True,
-                capture_output=True
+                input=namespace_yaml.encode(),
+                capture_output=True,
+                env=env
             )
+            if result.returncode != 0:
+                self.log_error(f"Failed to create namespace: {result.stderr.decode()}")
+                return False
             
             # Déployer avec kube-prometheus-stack (Helm recommandé en prod)
-            self.log("📦 Installing kube-prometheus-stack (this may take 2-3 minutes)...")
+            self.log("📦 Deploying Prometheus from manifests...")
             result = subprocess.run(
                 [
                     "kubectl", "apply", "-f",
-                    "https://raw.githubusercontent.com/prometheus-operator/kube-prometheus/main/manifests/setup"
+                    str(manifests_dir)
                 ],
-                check=True,
                 capture_output=True,
-                timeout=180
+                timeout=60,
+                env=env
             )
+            
+            if result.returncode != 0:
+                self.log_error(f"Prometheus operator failed: {result.stderr.decode()}")
+                return False
+            
+            # Log successful deployments
+            stdout = result.stdout.decode()
+            if stdout:
+                self.log("✅ Deployed resources:")
+                for line in stdout.strip().split('\n'):
+                    if line.strip():
+                        self.log(f"  {line}")
             
             self.log("Prometheus Operator deployed (real)")
             return True
@@ -340,17 +491,32 @@ datasources:
         # Mode réel : vrai déploiement
         try:
             import subprocess
+            import os
+            
+            # Prepare environment with kubeconfig
+            env = os.environ.copy()
+            if kubeconfig_path:
+                env["KUBECONFIG"] = kubeconfig_path
             
             self.log("📊 Deploying Grafana...")
             result = subprocess.run(
                 [
                     "kubectl", "apply", "-f",
-                    str(manifests_dir / "grafana.yaml")
+                    str(manifests_dir / "20-grafana.yaml")
                 ],
-                check=True,
                 capture_output=True,
-                timeout=60
+                timeout=60,
+                env=env
             )
+            
+            if result.returncode != 0:
+                self.log_error(f"Grafana deployment failed: {result.stderr.decode()}")
+                return False
+            
+            # Log successful deployment
+            stdout = result.stdout.decode()
+            if stdout:
+                self.log(f"✅ {stdout.strip()}")
             
             self.log("Grafana deployed (real)")
             return True

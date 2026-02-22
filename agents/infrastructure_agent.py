@@ -209,7 +209,7 @@ class InfrastructureAgent(BaseAgent):
         (workspace / "terraform.tfvars").write_text(tfvars)
         
         # Générer outputs.tf
-        outputs_tf = self._generate_outputs_tf(platform)
+        outputs_tf = self._generate_outputs_tf(platform, config)
         (workspace / "outputs.tf").write_text(outputs_tf)
     
     def _generate_main_tf(self, platform: str, config: Dict[str, Any]) -> str:
@@ -248,20 +248,19 @@ resource "null_resource" "k3s_server" {{
       echo "⏳ Waiting for K3s to be ready..."
       timeout 60 bash -c 'until kubectl get nodes 2>/dev/null; do sleep 2; done'
       echo "✅ K3s server is ready!"
+      
+      # Copy kubeconfig to output directory
+      sudo cp /etc/rancher/k3s/k3s.yaml ${{path.module}}/kubeconfig
+      sudo chmod 644 ${{path.module}}/kubeconfig
+      echo "📋 Kubeconfig saved to ${{path.module}}/kubeconfig"
     EOT
   }}
 }}
 
-# Store real kubeconfig
-resource "local_file" "kubeconfig" {{
+# Read the kubeconfig file after it's created
+data "local_file" "kubeconfig" {{
   depends_on = [null_resource.k3s_server]
-  
-  provisioner "local-exec" {{
-    command = "sudo cp /etc/rancher/k3s/k3s.yaml ${{path.module}}/kubeconfig && sudo chmod 644 ${{path.module}}/kubeconfig"
-  }}
-  
-  content  = file("${{path.module}}/kubeconfig")
-  filename = "${{path.module}}/kubeconfig"
+  filename   = "${{path.module}}/kubeconfig"
 }}
 '''
             
@@ -397,19 +396,27 @@ nodes              = {nodes}
 kubernetes_version = "{k8s_version}"
 '''
     
-    def _generate_outputs_tf(self, platform: str) -> str:
+    def _generate_outputs_tf(self, platform: str, config: Dict[str, Any]) -> str:
         """Génère le fichier outputs.tf"""
-        return '''
-output "cluster_endpoint" {
+        deployment_mode = config.get("deployment_mode", self.config.deployment_mode.value)
+        
+        # Use different resource reference based on mode
+        if deployment_mode == "real":
+            kubeconfig_ref = "data.local_file.kubeconfig.content"
+        else:
+            kubeconfig_ref = "local_file.kubeconfig.content"
+        
+        return f'''
+output "cluster_endpoint" {{
   description = "Kubernetes cluster endpoint"
   value       = "https://localhost:6443"
-}
+}}
 
-output "kubeconfig" {
+output "kubeconfig" {{
   description = "Kubeconfig content"
-  value       = try(local_file.kubeconfig.content, "")
+  value       = {kubeconfig_ref}
   sensitive   = true
-}
+}}
 '''
     
     def _save_kubeconfig(self, workflow_id: str, kubeconfig_content: str) -> str:

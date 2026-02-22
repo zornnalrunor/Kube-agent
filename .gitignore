@@ -1,9 +1,4 @@
-# Environment
 .env
-.env.local
-.env.*.local
-
-# Python
 *.pyc
 __pycache__/
 *.egg-info/
@@ -14,17 +9,11 @@ build/
 htmlcov/
 .mypy_cache/
 .ruff_cache/
-venv/
-*.py[cod]
-*$py.class
-*.so
 
 # Output directories
 output/
 data/*.db
 data/*.db-*
-logs/
-*.log
 
 # IDE
 .vscode/
@@ -32,7 +21,6 @@ logs/
 *.swp
 *.swo
 *~
-.DS_Store
 
 # Terraform
 *.tfstate
@@ -40,20 +28,6 @@ logs/
 .terraform/
 .terraform.lock.hcl
 terraform.tfvars.backup
-crash.log
-override.tf
-override.tf.json
-*_override.tf
-*_override.tf.json
-
-# Kubernetes
-*.kubeconfig
-kubeconfig*
-.kube/
-
-# OS
-Thumbs.db
-.Trash-*
 
 # Kubernetes
 *.kubeconfig

@@ -46,6 +46,13 @@ class ValidationAgent(BaseAgent):
             nodes_status = self._check_nodes(kubeconfig_path)
             logs.append(f"Nodes check: {nodes_status['ready']}/{nodes_status['total']} ready")
             
+            # Log node details
+            if nodes_status.get('nodes'):
+                self.log("🖥️  Node Status:")
+                for node in nodes_status['nodes']:
+                    status_emoji = "✅" if node['status'] == "Ready" else "❌"
+                    self.log(f"  {status_emoji} {node['name']}: {node['status']} ({node['version']})")
+            
             if nodes_status['ready'] < nodes_status['total']:
                 errors.append(f"Not all nodes are ready: {nodes_status['ready']}/{nodes_status['total']}")
                 self.log_error("Some nodes are not ready")
@@ -54,14 +61,50 @@ class ValidationAgent(BaseAgent):
             
             # Validation des pods système
             self.log("Checking system pods...")
-            pods_status = self._check_system_pods(kubeconfig_path)
-            logs.append(f"System pods: {pods_status['running']}/{pods_status['total']} running")
+            
+            # En mode réel, retry plusieurs fois pour laisser les pods démarrer
+            if self.config.deployment_mode.value == "real":
+                max_retries = 6
+                retry_delay = 10
+                for attempt in range(max_retries):
+                    pods_status = self._check_system_pods(kubeconfig_path)
+                    
+                    # Si tous les pods sont OK, on arrête
+                    if pods_status['running'] == pods_status['total']:
+                        break
+                    
+                    # Si pas le dernier essai, on attend
+                    if attempt < max_retries - 1:
+                        pending = pods_status.get('pending', 0)
+                        self.log(f"⏳ {pending} pods still starting, retrying in {retry_delay}s... ({attempt+1}/{max_retries})")
+                        import time
+                        time.sleep(retry_delay)
+            else:
+                pods_status = self._check_system_pods(kubeconfig_path)
+            
+            logs.append(f"System pods: {pods_status['running']}/{pods_status['total']} healthy")
+            
+            # Log detailed pod status
+            if pods_status.get('pod_details'):
+                self.log("📊 Pod Status Details:")
+                for pod_info in pods_status['pod_details']:
+                    if pod_info['phase'] == "Running":
+                        status_emoji = "✅"
+                    elif pod_info['phase'] == "Succeeded":
+                        status_emoji = "✅"
+                    elif pod_info['phase'] == "Pending":
+                        status_emoji = "⏳"
+                    else:
+                        status_emoji = "❌"
+                    self.log(f"  {status_emoji} {pod_info['namespace']}/{pod_info['name']}: {pod_info['phase']}")
+                    if pod_info.get('reason'):
+                        self.log(f"     Reason: {pod_info['reason']}")
             
             if pods_status['running'] < pods_status['total']:
                 errors.append(f"Not all system pods are running: {pods_status['running']}/{pods_status['total']}")
-                self.log_error("Some system pods are not running")
+                self.log_error(f"Some system pods are not healthy (pending: {pods_status.get('pending', 0)}, failed: {pods_status.get('failed', 0)})")
             else:
-                self.log_success(f"All {pods_status['total']} system pods are running")
+                self.log_success(f"All {pods_status['total']} system pods are healthy")
             
             # Validation du monitoring
             if monitoring_output.get("grafana_deployed"):
@@ -172,14 +215,30 @@ class ValidationAgent(BaseAgent):
         try:
             import subprocess
             import json
+            import os
+            
+            # Prepare environment with kubeconfig
+            env = os.environ.copy()
+            if kubeconfig_path:
+                env["KUBECONFIG"] = kubeconfig_path
             
             result = subprocess.run(
                 ["kubectl", "get", "nodes", "-o", "json"],
-                check=True,
                 capture_output=True,
                 text=True,
-                timeout=10
+                timeout=10,
+                env=env
             )
+            
+            if result.returncode != 0:
+                self.log_error(f"kubectl get nodes failed: {result.stderr}")
+                return {
+                    "total": 0,
+                    "ready": 0,
+                    "not_ready": 0,
+                    "nodes": [],
+                    "error": result.stderr
+                }
             
             nodes_data = json.loads(result.stdout)
             nodes = []
@@ -244,26 +303,63 @@ class ValidationAgent(BaseAgent):
         try:
             import subprocess
             import json
+            import os
+            
+            # Prepare environment with kubeconfig
+            env = os.environ.copy()
+            if kubeconfig_path:
+                env["KUBECONFIG"] = kubeconfig_path
             
             result = subprocess.run(
                 ["kubectl", "get", "pods", "--all-namespaces", "-o", "json"],
-                check=True,
                 capture_output=True,
                 text=True,
-                timeout=10
+                timeout=10,
+                env=env
             )
+            
+            if result.returncode != 0:
+                self.log_error(f"kubectl get pods failed: {result.stderr}")
+                return {
+                    "total": 0,
+                    "running": 0,
+                    "pending": 0,
+                    "failed": 0,
+                    "namespaces": {},
+                    "error": result.stderr
+                }
             
             pods_data = json.loads(result.stdout)
             running = 0
             pending = 0
             failed = 0
             namespaces = {}
+            pod_details = []
             
             for pod in pods_data.get("items", []):
                 namespace = pod["metadata"]["namespace"]
+                name = pod["metadata"]["name"]
                 phase = pod["status"].get("phase", "Unknown")
                 
-                if phase == "Running":
+                # Get container statuses for more details
+                reason = None
+                container_statuses = pod["status"].get("containerStatuses", [])
+                for container in container_statuses:
+                    if not container.get("ready", False):
+                        waiting = container.get("state", {}).get("waiting", {})
+                        if waiting:
+                            reason = waiting.get("reason", "Unknown")
+                            break
+                
+                pod_details.append({
+                    "namespace": namespace,
+                    "name": name,
+                    "phase": phase,
+                    "reason": reason
+                })
+                
+                # Count Running and Succeeded as healthy
+                if phase in ["Running", "Succeeded"]:
                     running += 1
                 elif phase == "Pending":
                     pending += 1
@@ -279,7 +375,8 @@ class ValidationAgent(BaseAgent):
                 "running": running,
                 "pending": pending,
                 "failed": failed,
-                "namespaces": namespaces
+                "namespaces": namespaces,
+                "pod_details": pod_details
             }
             
         except Exception as e:
