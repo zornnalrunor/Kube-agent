@@ -421,7 +421,7 @@ output "kubeconfig" {{
     
     def _save_kubeconfig(self, workflow_id: str, kubeconfig_content: str) -> str:
         """
-        Sauvegarde le kubeconfig
+        Sauvegarde le kubeconfig et le merge avec ~/.kube/config
         
         Args:
             workflow_id: ID du workflow
@@ -430,6 +430,11 @@ output "kubeconfig" {{
         Returns:
             str: Chemin du fichier kubeconfig
         """
+        import yaml
+        from pathlib import Path
+        import os
+        
+        # 1. Sauvegarder dans output/ (backup)
         kubeconfig_dir = self.config.output_dir / "kubeconfigs"
         kubeconfig_dir.mkdir(parents=True, exist_ok=True)
         
@@ -437,4 +442,78 @@ output "kubeconfig" {{
         kubeconfig_path.write_text(kubeconfig_content)
         kubeconfig_path.chmod(0o600)
         
+        # 2. Parser le kubeconfig
+        try:
+            config_data = yaml.safe_load(kubeconfig_content)
+            
+            # Renommer le contexte/cluster/user avec un nom unique
+            context_name = f"k3s-{workflow_id}"
+            cluster_name = f"k3s-cluster-{workflow_id}"
+            user_name = f"k3s-user-{workflow_id}"
+            
+            # Modifier les noms
+            if config_data.get('clusters'):
+                for cluster in config_data['clusters']:
+                    cluster['name'] = cluster_name
+            
+            if config_data.get('users'):
+                for user in config_data['users']:
+                    user['name'] = user_name
+            
+            if config_data.get('contexts'):
+                for context in config_data['contexts']:
+                    context['name'] = context_name
+                    if context.get('context'):
+                        context['context']['cluster'] = cluster_name
+                        context['context']['user'] = user_name
+            
+            config_data['current-context'] = context_name
+            
+            # 3. Merger avec ~/.kube/config
+            kube_dir = Path.home() / ".kube"
+            kube_dir.mkdir(parents=True, exist_ok=True)
+            
+            main_config_path = kube_dir / "config"
+            
+            if main_config_path.exists():
+                # Charger le config existant
+                main_config = yaml.safe_load(main_config_path.read_text())
+                
+                # Merger les clusters
+                if not main_config.get('clusters'):
+                    main_config['clusters'] = []
+                # Supprimer l'ancien si existe
+                main_config['clusters'] = [c for c in main_config['clusters'] if c['name'] != cluster_name]
+                main_config['clusters'].extend(config_data.get('clusters', []))
+                
+                # Merger les users
+                if not main_config.get('users'):
+                    main_config['users'] = []
+                main_config['users'] = [u for u in main_config['users'] if u['name'] != user_name]
+                main_config['users'].extend(config_data.get('users', []))
+                
+                # Merger les contexts
+                if not main_config.get('contexts'):
+                    main_config['contexts'] = []
+                main_config['contexts'] = [c for c in main_config['contexts'] if c['name'] != context_name]
+                main_config['contexts'].extend(config_data.get('contexts', []))
+                
+                # Garder le current-context original (ne pas forcer le changement)
+                # L'utilisateur changera avec kubectx si besoin
+            else:
+                # Pas de config existant, utiliser le nouveau
+                main_config = config_data
+            
+            # Sauvegarder le config mergé
+            main_config_path.write_text(yaml.dump(main_config, default_flow_style=False))
+            main_config_path.chmod(0o600)
+            
+            self.log(f"✓ Kubeconfig merged to ~/.kube/config as context '{context_name}'")
+            self.log(f"  Switch with: kubectx {context_name}")
+            
+        except Exception as e:
+            self.log_error(f"Failed to merge kubeconfig: {e}")
+            self.log("Using backup kubeconfig: export KUBECONFIG={kubeconfig_path}")
+        
         return str(kubeconfig_path)
+

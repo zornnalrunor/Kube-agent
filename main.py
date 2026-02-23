@@ -13,6 +13,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Confirm, IntPrompt, Prompt
 
+from agents.argocd_agent import ArgoCDAgent
 from agents.documentation_agent import DocumentationAgent
 from agents.infrastructure_agent import InfrastructureAgent
 from agents.monitoring_agent import MonitoringAgent
@@ -49,6 +50,7 @@ def create_system(config: Optional[Config] = None) -> OrchestratorAgent:
     # Créer les agents
     planner = PlannerAgent(cfg, state_manager)
     infrastructure = InfrastructureAgent(cfg, state_manager)
+    argocd = ArgoCDAgent(cfg, state_manager)
     monitoring = MonitoringAgent(cfg, state_manager)
     validation = ValidationAgent(cfg, state_manager)
     documentation = DocumentationAgent(cfg, state_manager)
@@ -59,6 +61,7 @@ def create_system(config: Optional[Config] = None) -> OrchestratorAgent:
     # Enregistrer les agents
     orchestrator.register_agent("planner", planner)
     orchestrator.register_agent("infrastructure", infrastructure)
+    orchestrator.register_agent("argocd", argocd)
     orchestrator.register_agent("monitoring", monitoring)
     orchestrator.register_agent("validation", validation)
     orchestrator.register_agent("documentation", documentation)
@@ -146,6 +149,12 @@ def interactive() -> None:
         default=True
     )
     
+    # Headlamp (UI Kubernetes)
+    headlamp_enabled = Confirm.ask(
+        "\n[bold]Activer Headlamp (interface web pour Kubernetes)?[/bold]",
+        default=True
+    )
+    
     # Mode de déploiement
     console.print("\n[bold]Quel mode de déploiement?[/bold]")
     console.print("  1. 📺 Démo rapide (simulation)")
@@ -195,6 +204,7 @@ def interactive() -> None:
         "deployment_mode": deployment_mode,
         "monitoring": {
             "enabled": monitoring_enabled,
+            "headlamp": headlamp_enabled,
             "retention": "15d" if environment == "production" else "7d",
         }
     }
@@ -226,6 +236,7 @@ def create(
     environment: str = typer.Option("development", "--environment", "-e", help="Environment"),
     nodes: int = typer.Option(3, "--nodes", "-n", help="Number of nodes"),
     monitoring: bool = typer.Option(True, "--monitoring/--no-monitoring", help="Enable monitoring"),
+    headlamp: bool = typer.Option(True, "--headlamp/--no-headlamp", help="Enable Headlamp (Kubernetes UI)"),
     region: Optional[str] = typer.Option(None, "--region", "-r", help="Cloud region (for EKS/AKS)"),
     real_deployment: bool = typer.Option(False, "--real-deployment", "--real", help="🚀 Mode déploiement réel (sinon démo rapide)"),
 ) -> None:
@@ -241,6 +252,7 @@ def create(
     console.print(f"  • Environnement: {environment}")
     console.print(f"  • Nœuds: {nodes}")
     console.print(f"  • Monitoring: {'Activé' if monitoring else 'Désactivé'}")
+    console.print(f"  • Headlamp UI: {'Activé' if headlamp else 'Désactivé'}")
     console.print(f"  • Mode: [magenta]{mode_label}[/magenta]")
     
     # Configuration
@@ -251,6 +263,7 @@ def create(
         "deployment_mode": deployment_mode,
         "monitoring": {
             "enabled": monitoring,
+            "headlamp": headlamp,
         }
     }
     

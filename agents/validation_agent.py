@@ -38,8 +38,10 @@ class ValidationAgent(BaseAgent):
             # Récupérer les outputs précédents
             infra_output = agent_input.previous_outputs.get("infrastructure", {})
             monitoring_output = agent_input.previous_outputs.get("monitoring", {})
+            argocd_output = agent_input.previous_outputs.get("argocd", {})
             
             kubeconfig_path = infra_output.get("kubeconfig_path")
+            argocd_installed = argocd_output.get("argocd_installed", False)
             
             # Validation des nœuds
             self.log("Checking node status...")
@@ -106,6 +108,27 @@ class ValidationAgent(BaseAgent):
             else:
                 self.log_success(f"All {pods_status['total']} system pods are healthy")
             
+            # Validation ArgoCD
+            argocd_status = {}
+            if argocd_installed:
+                self.log("Checking ArgoCD status...")
+                argocd_status = self._check_argocd(kubeconfig_path)
+                logs.append(f"ArgoCD: {argocd_status.get('status', 'unknown')}")
+                
+                if not argocd_status.get('healthy', False):
+                    errors.append("ArgoCD is not healthy")
+                    self.log_error("ArgoCD check failed")
+                else:
+                    self.log_success("ArgoCD is healthy")
+                    
+                    # Vérifier les Applications ArgoCD
+                    apps_status = argocd_status.get('applications', {})
+                    if apps_status:
+                        synced = apps_status.get('synced', 0)
+                        total = apps_status.get('total', 0)
+                        healthy = apps_status.get('healthy', 0)
+                        self.log(f"📱 ArgoCD Applications: {synced}/{total} synced, {healthy}/{total} healthy")
+            
             # Validation du monitoring
             if monitoring_output.get("grafana_deployed"):
                 self.log("Testing monitoring endpoints...")
@@ -145,6 +168,7 @@ class ValidationAgent(BaseAgent):
             health_report = self._generate_health_report(
                 nodes_status,
                 pods_status,
+                argocd_status,
                 monitoring_status if monitoring_output.get("grafana_deployed") else {},
                 network_status,
                 capacity
@@ -160,12 +184,13 @@ class ValidationAgent(BaseAgent):
             else:
                 self.log_success(f"Health score: {health_score}/100")
             
-            return AgentOutput(
+                return AgentOutput(
                 agent_name=self.agent_name,
                 success=len(errors) == 0 and health_score >= 80,
                 data={
                     "nodes_status": nodes_status,
                     "pods_status": pods_status,
+                    "argocd_status": argocd_status,
                     "monitoring_status": monitoring_status if monitoring_output.get("grafana_deployed") else {},
                     "network_status": network_status,
                     "capacity": capacity,
@@ -415,6 +440,102 @@ class ValidationAgent(BaseAgent):
             }
         }
     
+    def _check_argocd(self, kubeconfig_path: str) -> Dict[str, Any]:
+        """
+        Vérifie le statut d'ArgoCD et de ses Applications
+        
+        Returns:
+            Dict: Statut ArgoCD
+        """
+        # Mode démo
+        if self.config.deployment_mode.value == "demo":
+            return {
+                "healthy": True,
+                "status": "healthy",
+                "applications": {
+                    "total": 1,
+                    "synced": 1,
+                    "healthy": 1
+                }
+            }
+        
+        # Mode réel
+        try:
+            import subprocess
+            import json
+            import os
+            
+            env = os.environ.copy()
+            if kubeconfig_path:
+                env["KUBECONFIG"] = kubeconfig_path
+            
+            # Vérifier les pods ArgoCD
+            result = subprocess.run(
+                ["kubectl", "get", "pods", "-n", "argocd", "-o", "json"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                env=env
+            )
+            
+            if result.returncode != 0:
+                return {
+                    "healthy": False,
+                    "status": "unavailable",
+                    "error": result.stderr
+                }
+            
+            pods_data = json.loads(result.stdout)
+            total_pods = len(pods_data.get("items", []))
+            running_pods = sum(
+                1 for pod in pods_data.get("items", [])
+                if pod["status"].get("phase") == "Running"
+            )
+            
+            # Vérifier les Applications ArgoCD
+            app_result = subprocess.run(
+                ["kubectl", "get", "applications", "-n", "argocd", "-o", "json"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                env=env
+            )
+            
+            applications = {
+                "total": 0,
+                "synced": 0,
+                "healthy": 0
+            }
+            
+            if app_result.returncode == 0:
+                apps_data = json.loads(app_result.stdout)
+                applications["total"] = len(apps_data.get("items", []))
+                
+                for app in apps_data.get("items", []):
+                    status = app.get("status", {})
+                    sync_status = status.get("sync", {}).get("status", "")
+                    health_status = status.get("health", {}).get("status", "")
+                    
+                    if sync_status == "Synced":
+                        applications["synced"] += 1
+                    if health_status == "Healthy":
+                        applications["healthy"] += 1
+            
+            return {
+                "healthy": running_pods == total_pods,
+                "status": "healthy" if running_pods == total_pods else "degraded",
+                "pods_running": f"{running_pods}/{total_pods}",
+                "applications": applications
+            }
+            
+        except Exception as e:
+            self.log_error(f"Failed to check ArgoCD: {e}")
+            return {
+                "healthy": False,
+                "status": "error",
+                "error": str(e)
+            }
+    
     def _check_networking(self, kubeconfig_path: str) -> Dict[str, Any]:
         """
         Valide la configuration réseau
@@ -455,6 +576,7 @@ class ValidationAgent(BaseAgent):
         self,
         nodes_status: Dict[str, Any],
         pods_status: Dict[str, Any],
+        argocd_status: Dict[str, Any],
         monitoring_status: Dict[str, Any],
         network_status: Dict[str, Any],
         capacity: Dict[str, Any]
@@ -480,6 +602,14 @@ class ValidationAgent(BaseAgent):
             "status": "passed" if pods_status['running'] == pods_status['total'] else "failed",
             "message": f"{pods_status['running']}/{pods_status['total']} pods running",
         })
+        
+        # ArgoCD
+        if argocd_status:
+            checks.append({
+                "category": "ArgoCD",
+                "status": "passed" if argocd_status.get('healthy', False) else "failed",
+                "message": f"ArgoCD is {argocd_status.get('status', 'unknown')}",
+            })
         
         # Monitoring
         if monitoring_status:

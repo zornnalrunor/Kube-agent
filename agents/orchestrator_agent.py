@@ -62,6 +62,7 @@ class OrchestratorAgent(BaseAgent):
             workflow_steps = [
                 ("planner", "Planification du déploiement"),
                 ("infrastructure", "Provisioning de l'infrastructure"),
+                ("argocd", "Déploiement d'ArgoCD (GitOps)"),
                 ("monitoring", "Configuration du monitoring"),
                 ("validation", "Validation du cluster"),
                 ("documentation", "Génération de la documentation"),
@@ -194,25 +195,41 @@ class OrchestratorAgent(BaseAgent):
                 self.console.print(f"  [red]• {error}[/red]")
         
         # Afficher les accès
-        if success and "monitoring" in outputs:
-            monitoring_data = outputs["monitoring"]
-            if monitoring_data.get("grafana_url"):
-                self.console.print(f"\n[bold green]🎉 Déploiement terminé![/bold green]")
-                self.console.print(f"\n[bold]Accès:[/bold]")
-                self.console.print(f"  📊 Grafana: {monitoring_data['grafana_url']}")
-                self.console.print(f"  📈 Prometheus: {monitoring_data.get('prometheus_url', 'N/A')}")
-                
-                if "validation" in outputs:
-                    validation = outputs["validation"]
-                    self.console.print(f"\n[bold]Cluster:[/bold]")
-                    self.console.print(f"  Nodes: {validation.get('nodes_ready', 'N/A')}")
-                    self.console.print(f"  Pods: {validation.get('pods_running', 'N/A')}")
+        if success:
+            self.console.print(f"\n[bold green]🎉 Déploiement terminé![/bold green]")
+            self.console.print(f"\n[bold]Accès:[/bold]")
+            
+            # ArgoCD
+            if "argocd" in outputs:
+                argocd_data = outputs["argocd"]
+                if argocd_data.get("argocd_url"):
+                    argocd_url = argocd_data['argocd_url']
+                    argocd_pwd = argocd_data.get('argocd_admin_password', 'admin')
+                    self.console.print(f"  🔄 ArgoCD: {argocd_url} (admin/{argocd_pwd})")
+            
+            # Monitoring
+            if "monitoring" in outputs:
+                monitoring_data = outputs["monitoring"]
+                if monitoring_data.get("grafana_url"):
+                    self.console.print(f"  📊 Grafana: {monitoring_data['grafana_url']} (admin/admin)")
+                if monitoring_data.get("prometheus_url"):
+                    self.console.print(f"  📈 Prometheus: {monitoring_data['prometheus_url']}")
+                if monitoring_data.get("headlamp_url"):
+                    self.console.print(f"  🎛️  Headlamp: {monitoring_data['headlamp_url']}")
+            
+            # Cluster info
+            if "validation" in outputs:
+                validation = outputs["validation"]
+                self.console.print(f"\n[bold]Cluster:[/bold]")
+                self.console.print(f"  Nodes: {validation.get('nodes_ready', 'N/A')}")
+                self.console.print(f"  Pods: {validation.get('pods_running', 'N/A')}")
     
     def _get_status_for_agent(self, agent_name: str) -> WorkflowStatus:
         """Retourne le statut du workflow pour un agent donné"""
         status_map = {
             "planner": WorkflowStatus.PLANNING,
             "infrastructure": WorkflowStatus.PROVISIONING,
+            "argocd": WorkflowStatus.CONFIGURING,
             "monitoring": WorkflowStatus.CONFIGURING,
             "validation": WorkflowStatus.VALIDATING,
             "documentation": WorkflowStatus.DOCUMENTING,

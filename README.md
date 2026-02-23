@@ -1,399 +1,356 @@
-# Terraform Agent - Kubernetes Cluster Automation
+# 🤖 Terraform K8s Agent - GitOps Automation
 
-## 🎯 Objectif
+Système agentique IA pour l'automatisation complète de clusters Kubernetes avec ArgoCD, monitoring (Prometheus/Grafana/Headlamp) et GitOps.
 
-Système agentique IA pour l'automatisation complète de la création de clusters Kubernetes avec monitoring intégré (Prometheus/Grafana).
+```
+┌─────────────┐    ┌──────────────┐    ┌─────────────┐    ┌──────────────┐
+│   Planner   │ => │ Infrastructure│ => │   ArgoCD    │ => │  Monitoring  │
+│    Agent    │    │     Agent     │    │    Agent    │    │    Agent     │
+└─────────────┘    └──────────────┘    └─────────────┘    └──────────────┘
+                                              │
+                                    ┌─────────┴─────────┐
+                                    │   GitOps Pattern   │
+                                    │  (Auto-sync Apps)  │
+                                    └───────────────────┘
+```
 
-## 🏗️ Architecture Agentique
+## ✨ Features
 
-Ce projet utilise une architecture multi-agents orchestrée pour gérer l'ensemble du processus de provisioning et configuration :
+- 🚀 **Multi-plateforme**: K3s (local), EKS (AWS), AKS (Azure)
+- 🔄 **GitOps**: ArgoCD gère tous les déploiements applicatifs
+- 📊 **Monitoring**: Prometheus + Grafana + Headlamp (K8s UI)
+- 🤖 **IA-Powered**: LLM (Ollama) pour la planification intelligente
+- 🎯 **Multi-agents**: Architecture modulaire et extensible
+- 📦 **Simple**: Un seul commande pour tout déployer
+- 🧹 **Clean**: Script de nettoyage complet fourni
 
-### Agents Spécialisés
+## 🏗️ Architecture
 
-1. **Orchestrator Agent** (`orchestrator_agent.py`)
-   - Coordonne l'exécution de tous les agents
-   - Gère le workflow global
-   - Maintient l'état du système
+### Agents
 
-2. **Planner Agent** (`planner_agent.py`)
-   - Analyse les requirements utilisateur
-   - Génère un plan d'exécution détaillé
-   - Détermine les ressources nécessaires
-   - Choisit la plateforme (K3s/EKS/AKS)
+| Agent | Rôle | Output |
+|-------|------|--------|
+| **Planner** | Analyse les besoins, planifie le déploiement | Configuration optimisée |
+| **Infrastructure** | Provisionne K3s avec Terraform | Cluster K8s + kubeconfig |
+| **ArgoCD** | Installe ArgoCD (GitOps) | ArgoCD opérationnel |
+| **Monitoring** | Déploie le stack via ArgoCD | Prometheus/Grafana/Headlamp |
+| **Validation** | Vérifie la santé du cluster | Rapport de santé + score |
+| **Documentation** | Génère la doc technique | Runbooks + diagrammes |
 
-3. **Infrastructure Agent** (`infrastructure_agent.py`)
-   - Génère et applique le code Terraform
-   - Provisionne le cluster Kubernetes
-   - Gère les providers cloud (AWS/Azure/local)
-   - Configure le réseau et la sécurité
+### GitOps Flow
 
-4. **Monitoring Agent** (`monitoring_agent.py`)
-   - Déploie Prometheus Operator
-   - Configure Grafana avec dashboards
-   - Met en place les alertes
-   - Configure les ServiceMonitors
-
-5. **Validation Agent** (`validation_agent.py`)
-   - Vérifie la santé du cluster
-   - Teste les endpoints
-   - Valide le monitoring
-   - Génère un rapport de statut
-
-6. **Documentation Agent** (`documentation_agent.py`)
-   - Génère la documentation technique
-   - Crée les runbooks
-   - Documente l'architecture déployée
-   - Génère les diagrammes
+```
+1. Infrastructure Agent  →  K3s cluster
+2. ArgoCD Agent          →  ArgoCD installé
+3. Monitoring Agent      →  Crée Git repo local + ArgoCD Applications
+4. ArgoCD                →  Sync automatique des manifests
+5. Validation Agent      →  Vérifie ArgoCD Apps (synced/healthy)
+```
 
 ## 🚀 Quick Start
 
 ### Prérequis
 
 ```bash
-# Python 3.11+
+# Python 3.14+
 python --version
 
-# Terraform
+# Terraform v1.14+
 terraform --version
 
-# kubectl
+# kubectl v1.35+
 kubectl version --client
 
-# Optionnel: Docker (pour K3s local)
-docker --version
+# Ollama (LLM local)
+ollama --version
+ollama pull llama3.2:1b
 ```
 
 ### Installation
 
 ```bash
-# Cloner et installer les dépendances
 cd Terraform-agent-eks-aks
-pip install -r requirements.txt
 
-# Configurer les credentials (pour EKS/AKS)
-export AWS_ACCESS_KEY_ID="your-key"
-export AWS_SECRET_ACCESS_KEY="your-secret"
-# ou
-az login
+# Environnement virtuel
+python -m venv .venv
+source .venv/bin/activate  # ou .venv/bin/activate.fish
+
+# Dépendances
+pip install -r requirements-minimal.txt
 ```
 
 ### Utilisation
 
-#### Mode Interactif
+#### Mode Interactif (Recommandé)
 
 ```bash
-python main.py
+python main.py interactive
 ```
 
-L'orchestrateur IA vous guidera à travers les questions pour :
-- Choisir la plateforme (K3s/EKS/AKS)
-- Définir la taille du cluster
-- Configurer le monitoring
-- Sélectionner les options avancées
+Questions posées:
+- Plateforme: K3s, EKS, AKS?
+- Environnement: dev, staging, prod?
+- Nœuds: combien?
+- Monitoring: activer?
+- Headlamp: activer (UI Kubernetes)?
+- Mode: démo (simulation) ou réel?
 
-#### Mode Configuration
+#### Mode CLI
 
 ```bash
-# Utiliser un fichier de configuration
-python main.py --config examples/k3s-local.yaml
+# Déploiement complet K3s avec tout
+python main.py create \
+  --platform k3s \
+  --nodes 3 \
+  --environment production \
+  --monitoring \
+  --headlamp \
+  --real-deployment
 
-# Exemples fournis
-python main.py --config examples/eks-prod.yaml
-python main.py --config examples/aks-dev.yaml
+# Démo rapide (simulation)
+python main.py create -p k3s -n 1 --monitoring --headlamp
 ```
 
-#### Mode CLI Direct
+## 🎯 Modes de déploiement
+
+### 📺 Mode Démo (par défaut)
+- Simulation ultra-rapide (~10 secondes)
+- Aucune installation réelle
+- Parfait pour tester le workflow
+
+### 🚀 Mode Réel
+- Installation complète de K3s
+- Déploiement ArgoCD + Monitoring
+- Nécessite sudo pour K3s
+- Durée: 2-5 minutes
 
 ```bash
-# Créer un cluster K3s local
-python main.py create --platform k3s --nodes 3 --monitoring true
-
-# Créer un cluster EKS
-python main.py create --platform eks --region us-east-1 --nodes 3 --instance-type t3.medium
-
-# Détruire un cluster
-python main.py destroy --cluster-id my-cluster
+# Activer le mode réel
+python main.py create -p k3s -n 1 --monitoring --headlamp --real-deployment
 ```
 
-## 📁 Structure du Projet
+## 🌐 Accès aux services
 
-```
-.
-├── main.py                      # Point d'entrée principal
-├── requirements.txt             # Dépendances Python
-├── pyproject.toml              # Configuration Poetry
-├── README.md
-│
-├── agents/                      # Système multi-agents
-│   ├── __init__.py
-│   ├── orchestrator_agent.py   # Chef d'orchestre
-│   ├── planner_agent.py        # Planification
-│   ├── infrastructure_agent.py # Provisioning
-│   ├── monitoring_agent.py     # Monitoring
-│   ├── validation_agent.py     # Validation
-│   └── documentation_agent.py  # Documentation
-│
-├── core/                        # Core framework
-│   ├── __init__.py
-│   ├── agent_base.py           # Classe de base pour agents
-│   ├── state_manager.py        # Gestion d'état
-│   ├── llm_provider.py         # Interface LLM (OpenAI/Anthropic/Ollama)
-│   └── config.py               # Configuration globale
-│
-├── terraform/                   # Modules Terraform
-│   ├── k3s/                    # Module K3s (local/VMs)
-│   ├── eks/                    # Module AWS EKS
-│   ├── aks/                    # Module Azure AKS
-│   └── modules/                # Modules réutilisables
-│       ├── monitoring/         # Stack Prometheus/Grafana
-│       ├── ingress/            # Ingress controllers
-│       └── storage/            # Storage classes
-│
-├── kubernetes/                  # Manifests K8s
-│   ├── monitoring/             # Prometheus/Grafana
-│   ├── dashboards/             # Grafana dashboards
-│   └── alerts/                 # Alerting rules
-│
-├── examples/                    # Configurations d'exemple
-│   ├── k3s-local.yaml
-│   ├── eks-prod.yaml
-│   └── aks-dev.yaml
-│
-├── tests/                       # Tests
-│   ├── test_agents.py
-│   ├── test_infrastructure.py
-│   └── test_integration.py
-│
-└── docs/                        # Documentation
-    ├── ARCHITECTURE.md
-    ├── AGENTS.md
-    ├── CONFIGURATION.md
-    └── TROUBLESHOOTING.md
-```
+Après un déploiement réel:
 
-## 🤖 Comment ça Marche ?
+| Service | URL | Credentials |
+|---------|-----|-------------|
+| **ArgoCD** | http://localhost:30080 | `admin` / voir commande ci-dessous |
+| **Grafana** | http://localhost:30300 | `admin` / `admin` |
+| **Prometheus** | http://localhost:30090 | - |
+| **Headlamp** | http://localhost:30466 | In-cluster auth |
 
-### Workflow Agentique
-
-```
-1. User Input → Orchestrator Agent
-        ↓
-2. Orchestrator → Planner Agent
-        ↓ (Plan d'exécution)
-3. Orchestrator → Infrastructure Agent
-        ↓ (Terraform apply)
-4. Orchestrator → Monitoring Agent
-        ↓ (Deploy Prometheus/Grafana)
-5. Orchestrator → Validation Agent
-        ↓ (Health checks)
-6. Orchestrator → Documentation Agent
-        ↓ (Generate docs)
-7. Return → Complete deployment report
-```
-
-### Communication Inter-Agents
-
-Les agents communiquent via un **State Manager** centralisé qui :
-- Maintient l'état global du workflow
-- Permet les rollbacks en cas d'erreur
-- Stocke les outputs de chaque agent
-- Gère la persistance (SQLite/PostgreSQL)
-
-### Intelligence Artificielle
-
-Chaque agent utilise un LLM (configurable) pour :
-- **Planner** : Optimiser le plan en fonction du contexte
-- **Infrastructure** : Générer du Terraform idiomatique
-- **Monitoring** : Configurer les alertes pertinentes
-- **Validation** : Analyser les logs et diagnostiquer
-- **Documentation** : Créer une doc contextuelle
-
-LLM supportés :
-- OpenAI GPT-4
-- Anthropic Claude
-- Ollama (local, gratuit)
-
-## 🎨 Exemples d'Usage
-
-### Exemple 1 : K3s Local pour Dev
-
-```yaml
-# examples/k3s-local.yaml
-platform: k3s
-environment: development
-nodes: 3
-resources:
-  memory: 4Gi
-  cpu: 2
-monitoring:
-  enabled: true
-  retention: 7d
-  dashboards:
-    - kubernetes-cluster
-    - node-exporter
-```
+### Récupérer le mot de passe ArgoCD
 
 ```bash
-python main.py --config examples/k3s-local.yaml
-```
-
-### Exemple 2 : EKS Production
-
-```yaml
-# examples/eks-prod.yaml
-platform: eks
-environment: production
-region: eu-west-1
-kubernetes_version: "1.28"
-node_groups:
-  - name: general
-    instance_type: t3.large
-    min_size: 3
-    max_size: 10
-    disk_size: 100
-monitoring:
-  enabled: true
-  retention: 90d
-  alerting: true
-  slack_webhook: https://hooks.slack.com/...
-```
-
-### Exemple 3 : Mode Conversationnel IA
-
-```bash
-$ python main.py
-
-🤖 Orchestrator Agent: Bonjour! Je vais vous aider à créer votre cluster Kubernetes.
-
-? Quelle plateforme souhaitez-vous utiliser?
-  1. K3s (local/VMs)
-  2. AWS EKS
-  3. Azure AKS
-> 1
-
-🤖 Planner Agent: Parfait! Pour K3s, combien de nœuds voulez-vous? (1-10)
-> 3
-
-🤖 Planner Agent: Voulez-vous activer le monitoring (Prometheus/Grafana)? (Y/n)
-> Y
-
-📋 Plan généré:
-  ✓ Cluster K3s avec 3 nœuds
-  ✓ Monitoring stack (Prometheus + Grafana)
-  ✓ Dashboards pré-configurés
-  ✓ Estimated time: ~5 minutes
-
-? Confirmer le déploiement? (Y/n)
-> Y
-
-🔧 Infrastructure Agent: Génération du code Terraform...
-✓ Terraform initialized
-✓ Plan created (12 resources to add)
-
-🚀 Infrastructure Agent: Application du plan...
-✓ Cluster created (3/3 nodes ready)
-
-📊 Monitoring Agent: Déploiement de la stack monitoring...
-✓ Prometheus Operator deployed
-✓ Grafana configured
-✓ Dashboards imported (5)
-
-✅ Validation Agent: Vérification du cluster...
-✓ All nodes healthy
-✓ Prometheus scraping (15 targets)
-✓ Grafana accessible at http://localhost:3000
-
-📚 Documentation Agent: Génération de la documentation...
-✓ Architecture diagram created
-✓ Runbook generated
-✓ Configuration documented
-
-🎉 Déploiement terminé!
-📊 Grafana: http://localhost:3000 (admin/admin)
-📈 Prometheus: http://localhost:9090
-📝 Documentation: ./output/docs/
+kubectl -n argocd get secret argocd-initial-admin-secret \
+  -o jsonpath="{.data.password}" | base64 -d && echo
 ```
 
 ## 🔧 Configuration
 
-### LLM Provider
-
-```python
-# .env ou core/config.py
-LLM_PROVIDER=openai  # openai, anthropic, ollama
-OPENAI_API_KEY=sk-...
-ANTHROPIC_API_KEY=sk-ant-...
-OLLAMA_MODEL=llama2  # Pour usage local gratuit
-```
-
-### State Backend
-
-```python
-# Configuration du state manager
-STATE_BACKEND=sqlite  # sqlite, postgresql, file
-STATE_DB_PATH=./data/state.db
-```
-
-## 🧪 Tests
+### Environnement
 
 ```bash
-# Tests unitaires
-pytest tests/test_agents.py
+# Mode de déploiement (auto-détecté sinon)
+export DEPLOYMENT_MODE=real  # ou demo
 
-# Tests d'intégration
-pytest tests/test_integration.py
-
-# Test complet avec K3s local
-./scripts/test-full-workflow.sh
+# LLM Configuration (optionnel)
+export OLLAMA_BASE_URL=http://localhost:11434
+export OLLAMA_MODEL=llama3.2:1b
 ```
 
-## 📊 Monitoring Inclus
+### Fichier de config (avancé)
 
-### Prometheus
-- Metrics des nœuds (node-exporter)
-- Metrics Kubernetes (kube-state-metrics)
-- Metrics applicatives (ServiceMonitors)
-- Alerting rules pré-configurées
+```yaml
+# config.yaml
+platform: k3s
+environment: production
+nodes: 3
+deployment_mode: real
+monitoring:
+  enabled: true
+  headlamp: true
+  retention: 30d
+```
 
-### Grafana
-- Dashboard : Kubernetes Cluster Monitoring
-- Dashboard : Node Exporter Full
-- Dashboard : Prometheus Stats
-- Dashboard : Application Metrics
-- Alerting intégré
+```bash
+python main.py create --config config.yaml
+```
+
+## 📁 Structure du projet
+
+```
+Terraform-agent-eks-aks/
+├── agents/                    # Agents spécialisés
+│   ├── planner_agent.py
+│   ├── infrastructure_agent.py
+│   ├── argocd_agent.py       # 🆕 GitOps
+│   ├── monitoring_agent.py
+│   ├── validation_agent.py
+│   ├── documentation_agent.py
+│   └── orchestrator_agent.py
+├── core/                      # Core système
+│   ├── agent_base.py
+│   ├── config.py
+│   ├── llm_provider.py
+│   └── state_manager.py
+├── output/                    # Fichiers générés
+│   ├── terraform/             # Code Terraform
+│   ├── kubeconfigs/           # Configs K8s
+│   ├── manifests/             # Manifests K8s
+│   ├── gitops/                # 🆕 Repos Git locaux
+│   ├── argocd-apps/           # 🆕 Applications ArgoCD
+│   └── docs/                  # Documentation
+├── main.py                    # Point d'entrée CLI
+├── cleanup.sh                 # Script de nettoyage
+└── README.md                  # Ce fichier
+```
+
+## 🧹 Nettoyage
+
+Pour supprimer complètement le cluster et tout nettoyer:
+
+```bash
+./cleanup.sh
+```
+
+Le script nettoie:
+- ✅ Namespaces K8s (`monitoring`, `argocd`)
+- ✅ K3s (désinstallation complète)
+- ✅ Fichiers générés (`output/`, `data/`, `logs/`)
+- ✅ Contextes k3s dans `~/.kube/config`
+- ✅ États Terraform
+
+## 🎓 Concepts
+
+### GitOps avec ArgoCD
+
+**Avant (kubectl apply direct):**
+```
+Agent → kubectl apply → Cluster
+```
+❌ Pas de source de vérité  
+❌ Drift non détecté  
+❌ Pas d'historique
+
+**Après (GitOps + ArgoCD):**
+```
+Agent → Git repo → ArgoCD → Cluster
+                      ↑
+                   Reconcile
+```
+✅ Git = source de vérité  
+✅ Self-heal automatique  
+✅ Historique complet  
+✅ Rollback facile
+
+### App of Apps Pattern
+
+ArgoCD peut se gérer lui-même + toutes les apps:
+
+```
+root-app (Bootstrap)
+├── argocd-app           # ArgoCD s'auto-gère
+├── monitoring-app       # Prometheus + Grafana + Headlamp
+└── apps/
+    ├── webapp-app       # Applications métier
+    └── database-app
+```
+
+## 🐛 Troubleshooting
+
+### K3s ne démarre pas
+
+```bash
+# Logs K3s
+sudo journalctl -u k3s -f
+
+# Réinstaller
+sudo /usr/local/bin/k3s-uninstall.sh
+curl -sfL https://get.k3s.io | sh -
+```
+
+### ArgoCD ne sync pas
+
+```bash
+# Vérifier l'Application
+kubectl -n argocd get applications
+
+# Forcer un sync
+kubectl -n argocd get app monitoring-{workflow-id} -o yaml
+```
+
+### Pods en CrashLoop
+
+```bash
+# Logs détaillés
+kubectl -n monitoring logs -l app=prometheus
+kubectl -n monitoring describe pod {pod-name}
+
+# Events du namespace
+kubectl -n monitoring get events --sort-by='.lastTimestamp'
+```
+
+### Contextes k3s en double
+
+```bash
+# Lister
+kubectl config get-contexts | grep k3s
+
+# Supprimer manuellement
+kubectl config delete-context k3s-{workflow-id}
+```
 
 ## 🔒 Sécurité
 
-- Secrets gérés via Terraform Vault ou Sealed Secrets
-- RBAC configuré par défaut
-- Network Policies
-- Pod Security Standards
+⚠️ **Attention**: Ce projet est pour du développement/testing local.
 
-## 🤝 Contribution
+Pour la production:
+- [ ] Changer les mots de passe par défaut
+- [ ] Utiliser des secrets externes (Vault, AWS Secrets Manager)
+- [ ] Activer l'authentification RBAC
+- [ ] Configurer Network Policies
+- [ ] Activer mTLS (Istio/Linkerd)
+- [ ] Mettre en place des PSP/PSA
 
-Les contributions sont bienvenues ! Voir [CONTRIBUTING.md](CONTRIBUTING.md)
+## 📊 Métriques
 
-## 📝 License
+Dashboards Grafana pré-configurés:
+- Cluster Overview
+- Node Exporter Full
+- Prometheus Stats
+- Pod Monitoring
+- ArgoCD Metrics
 
-MIT License - voir [LICENSE](LICENSE)
+## 🚧 Roadmap
 
-## 🆘 Support
+- [ ] Support Istio (Service Mesh + Kiali)
+- [ ] Support multi-clusters
+- [ ] Applications Helm via ArgoCD
+- [ ] Image Updater ArgoCD (CD complet)
+- [ ] Support EKS/AKS (actuellement K3s only)
+- [ ] Notifications (Slack, Discord)
+- [ ] Backup/Restore avec Velero
 
-- Documentation : [docs/](docs/)
-- Issues : GitHub Issues
-- Discussions : GitHub Discussions
+## 🤝 Contrib
 
-## 🗺️ Roadmap
+Contributions bienvenues! Le code est structuré en agents indépendants, facile d'en ajouter.
 
-- [ ] Support GKE (Google Kubernetes Engine)
-- [ ] Support pour Rancher
-- [ ] UI Web pour le dashboard agent
-- [ ] Plugin Terraform pour provider custom
-- [ ] GitOps integration (ArgoCD/Flux)
-- [ ] Cost optimization agent
-- [ ] Security scanning agent
-- [ ] Backup & disaster recovery agent
+Architecture:
+1. Créer un nouveau fichier agent dans `agents/`
+2. Hériter de `BaseAgent`
+3. Implémenter `execute()`
+4. Enregistrer dans `orchestrator_agent.py`
 
----
+## 📄 License
 
-**Made with ❤️ and 🤖 AI Agents**
+MIT
+
+## 🙏 Credits
+
+- **K3s**: Lightweight Kubernetes by Rancher
+- **ArgoCD**: GitOps continuous delivery tool
+- **Prometheus/Grafana**: Monitoring stack
+- **Headlamp**: Kubernetes UI
+- **Ollama**: Local LLM runtime
