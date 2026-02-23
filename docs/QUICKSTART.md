@@ -1,11 +1,11 @@
-# Guide de Démarrage Rapide
+# Quick Start Guide
 
-## 🚀 Installation en 5 Minutes
+## 🚀 5-Minute Installation
 
-### 1. Prérequis
+### 1. Prerequisites
 
 ```bash
-# Python 3.11+
+# Python 3.14+
 python --version
 
 # Terraform
@@ -18,360 +18,406 @@ kubectl version --client
 git --version
 ```
 
-### 2. Cloner et Installer
+### 2. Clone and Install
 
 ```bash
-# Cloner le repo (ou l'extraire si fichier local)
+# Clone the repo (or extract if local file)
 cd Terraform-agent-eks-aks
 
-# Installer les dépendances
-pip install -r requirements.txt
+# Install dependencies
+pip install -r requirements-minimal.txt
 ```
 
 ### 3. Configuration
 
 ```bash
-# Copier l'exemple de config
+# Copy example config
 cp .env.example .env
 
-# Éditer la config
+# Edit config
 nano .env
 ```
 
-**Configuration minimale** :
+**Minimal configuration**:
 
 ```bash
-# Choisir un provider LLM
-LLM_PROVIDER=ollama  # Gratuit et local
+# Choose an LLM provider
+LLM_PROVIDER=ollama  # Free and local
 OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_MODEL=llama2
+OLLAMA_MODEL=llama3.2:1b
 
-# Ou OpenAI (payant mais performant)
+# Or OpenAI (paid but performant)
 # LLM_PROVIDER=openai
 # OPENAI_API_KEY=sk-your-key-here
 ```
 
-Si vous utilisez Ollama :
+If using Ollama:
 
 ```bash
-# Installer Ollama
-curl -fsSL https://ollama.ai/install.sh | sh
+# Install Ollama
+curl -fsSL https://ollama.com/install.sh | sh
 
-# Télécharger un modèle
-ollama pull llama2
+# Download a model
+ollama pull llama3.2:1b
 
-# Vérifier que ça fonctionne
+# Verify it works
 ollama list
 ```
 
-### 4. Premier Test - Mode Interactif
+### 4. First Test - Interactive Mode
 
 ```bash
-python main.py
+python main.py interactive
 ```
 
-Suivez les prompts :
-1. Choisir **K3s** (option 1)
-2. Environnement **Development** (option 1)
-3. **3 nœuds**
-4. **Activer le monitoring** (Y)
-5. Confirmer (Y)
+Follow the prompts:
+1. Choose **K3s** (option 1)
+2. Environment **Development** (option 1)
+3. **3 nodes**
+4. **Enable monitoring** (Y)
+5. **Enable Headlamp** (Y)
+6. Confirm (Y)
 
-🎉 Le système va :
-- Analyser vos besoins
-- Optimiser la configuration
-- Générer le Terraform
-- Créer le cluster (simulation pour la démo)
-- Déployer Prometheus/Grafana
-- Valider le cluster
-- Générer la documentation
+🎉 The system will:
+- Analyze your requirements
+- Optimize the configuration
+- Generate Terraform code
+- Create the cluster (simulation for demo)
+- Deploy ArgoCD + Prometheus + Grafana + Headlamp
+- Validate the cluster
+- Generate documentation
 
-### 5. Résultat
+### 5. Result
 
-Vous obtiendrez :
+You'll get:
 
 ```
-✅ Déploiement terminé avec succès!
+✅ Deployment completed successfully!
 
-📊 Grafana: http://localhost:3000 (admin/admin)
-📈 Prometheus: http://localhost:9090
-📝 Documentation: ./output/docs/k3s-development-xxxxx/
+Access:
+  🔄 ArgoCD: http://localhost:30080 (admin/xxx)
+  📊 Grafana: http://localhost:30300 (admin/admin)
+  📈 Prometheus: http://localhost:30090
+  🎛️  Headlamp: http://localhost:30466
+
+Cluster:
+  Nodes: 3/3
+  Pods: 15/15
 ```
 
 ---
 
-## 🎯 Cas d'Usage Courants
+## 🎯 Common Use Cases
 
-### Cas 1 : Dev Local Rapide
+### Case 1: Quick Local Dev
 
-**Objectif** : Cluster K3s minimal pour dev
+**Objective**: Minimal K3s cluster for development
 
 ```bash
 python main.py create \
   --platform k3s \
   --environment development \
   --nodes 1 \
-  --monitoring false
+  --no-monitoring
 ```
 
-**Durée** : ~2 minutes
+**Duration**: ~2 minutes
 
-### Cas 2 : Dev avec Monitoring
+### Case 2: Dev with Full Stack
 
-**Objectif** : Cluster complet pour tester le monitoring
+**Objective**: Complete cluster with monitoring and GitOps
 
 ```bash
-python main.py --config examples/k3s-local.yaml
+python main.py create -p k3s -n 2 --monitoring --headlamp --real-deployment
 ```
 
-**Durée** : ~5 minutes
+**Duration**: ~5 minutes
 
-### Cas 3 : Production EKS
+### Case 3: Production EKS
 
-**Objectif** : Cluster production AWS avec HA
+**Objective**: Production AWS cluster with HA
 
-**Prérequis** :
+**Prerequisites**:
 ```bash
-# Configurer AWS CLI
+# Configure AWS CLI
 aws configure
 ```
 
-**Commande** :
+**Command**:
 ```bash
-python main.py --config examples/eks-prod.yaml
+python main.py --config examples/eks-prod.yaml --real-deployment
 ```
 
-**Durée** : ~15-20 minutes
-
-### Cas 4 : Staging AKS
-
-**Objectif** : Cluster staging Azure
-
-**Prérequis** :
-```bash
-# Login Azure
-az login
-```
-
-**Commande** :
-```bash
-python main.py --config examples/aks-dev.yaml
-```
-
-**Durée** : ~10-15 minutes
+**Duration**: ~15-20 minutes
 
 ---
 
-## 📊 Accéder au Monitoring
+## 📊 Accessing Monitoring
+
+### ArgoCD (GitOps UI)
+
+```bash
+# Get the URL from deployment output
+open http://localhost:30080
+
+# Get admin password
+kubectl -n argocd get secret argocd-initial-admin-secret \
+  -o jsonpath="{.data.password}" | base64 -d && echo
+
+# Login
+Username: admin
+Password: [from command above]
+```
+
+**Features**:
+- View all Applications
+- See sync status
+- Manual sync/refresh
+- Check Application health
 
 ### Grafana
 
 ```bash
-# Récupérer l'URL depuis le résultat du déploiement
-# Ou dans la documentation générée
+# Access
+open http://localhost:30300
 
-# Accéder
-open http://localhost:3000
-
-# Credentials (par défaut)
+# Default credentials
 Username: admin
 Password: admin
 ```
 
-**Dashboards disponibles** :
+**Pre-configured dashboards**:
 - Kubernetes Cluster Monitoring
 - Node Exporter Full
 - Prometheus Stats
 - Pod Monitoring
+- ArgoCD Metrics
 
 ### Prometheus
 
 ```bash
-# Accéder
-open http://localhost:9090
+# Access
+open http://localhost:30090
 
-# Queries utiles
-up{}  # Tous les targets
+# Useful queries
+up{}  # All targets
 node_cpu_seconds_total  # CPU usage
-node_memory_MemAvailable_bytes  # Memory disponible
+node_memory_MemAvailable_bytes  # Available memory
+argocd_app_info  # ArgoCD applications
 ```
+
+### Headlamp (Kubernetes UI)
+
+```bash
+# Access
+open http://localhost:30466
+
+# In-cluster authentication (no login needed)
+```
+
+**Features**:
+- Browse all Kubernetes resources
+- View logs
+- Edit resources
+- Pod shell access
 
 ---
 
-## 🔍 Vérifier le Cluster
+## 🔍 Verify the Cluster
 
 ### Via kubectl
 
 ```bash
-# Obtenir le kubeconfig depuis la doc générée
-export KUBECONFIG=./output/kubeconfigs/k3s-development-xxxxx.kubeconfig
+# Get kubeconfig from generated docs
+export KUBECONFIG=~/.kube/config
 
-# Vérifier les nodes
+# Check nodes
 kubectl get nodes
 
-# Vérifier tous les pods
+# Check all pods
 kubectl get pods --all-namespaces
 
-# Vérifier le monitoring
+# Check monitoring
 kubectl get pods -n monitoring
+
+# Check ArgoCD
+kubectl get pods -n argocd
+kubectl get applications -n argocd
 ```
 
-### Via le Script de Validation
+### Via Validation Script
 
 ```bash
-# Obtenir le workflow ID depuis le résultat
+# Get workflow ID from output
 python main.py status k3s-development-xxxxx
 ```
 
 ---
 
-## 📚 Explorer la Documentation
+## 📚 Explore Documentation
 
-Chaque déploiement génère une documentation complète :
+Each deployment generates complete documentation:
 
 ```bash
 cd output/docs/k3s-development-xxxxx/
 
-# Lire le README
+# Read the README
 cat README.md
 
 # Architecture
 cat ARCHITECTURE.md
 
-# Runbook opérationnel
+# Operational runbook
 cat RUNBOOK.md
 
-# Guide de troubleshooting
+# Troubleshooting guide
 cat TROUBLESHOOTING.md
-
-# Voir le diagramme
-cat ARCHITECTURE_DIAGRAM.txt
 ```
 
 ---
 
-## 🔧 Mode CLI Avancé
+## 🔧 Advanced CLI Mode
 
-### Créer un Cluster
+### Create a Cluster
 
 ```bash
 python main.py create \
   --platform k3s \
   --environment production \
   --nodes 5 \
-  --monitoring true \
-  --region us-east-1  # pour EKS/AKS
+  --monitoring \
+  --headlamp \
+  --real-deployment \
+  --region us-east-1  # for EKS/AKS
 ```
 
-### Vérifier le Statut
+### Check Status
 
 ```bash
-# Liste des workflows
+# List workflows
 python main.py list-workflows
 
-# Détails d'un workflow
+# Workflow details
 python main.py status <workflow-id>
 ```
 
-### Détruire un Cluster
+### Destroy a Cluster
 
 ```bash
-python main.py destroy <workflow-id>
+# Complete cleanup
+./cleanup.sh
 ```
 
 ---
 
-## 🐛 Troubleshooting Rapide
+## 🐛 Quick Troubleshooting
 
-### Problème : Import errors
+### Problem: Import errors
 
 ```bash
-# Réinstaller les dépendances
-pip install --upgrade -r requirements.txt
+# Reinstall dependencies
+pip install --upgrade -r requirements-minimal.txt
 ```
 
-### Problème : LLM timeout
+### Problem: LLM timeout
 
 ```bash
-# Si Ollama
-# Vérifier le service
+# If using Ollama
+# Check the service
 systemctl status ollama
 
-# Relancer
+# Restart
 ollama serve
 
-# Si OpenAI
-# Vérifier la clé API
+# If using OpenAI
+# Check API key
 echo $OPENAI_API_KEY
 ```
 
-### Problème : Terraform errors
+### Problem: Terraform errors
 
 ```bash
-# Vérifier Terraform
+# Check Terraform
 terraform --version
 
-# Réinstaller si nécessaire
+# Reinstall if needed
 # Linux
-wget https://releases.hashicorp.com/terraform/1.6.0/terraform_1.6.0_linux_amd64.zip
-unzip terraform_1.6.0_linux_amd64.zip
+wget https://releases.hashicorp.com/terraform/1.14.5/terraform_1.14.5_linux_amd64.zip
+unzip terraform_1.14.5_linux_amd64.zip
 sudo mv terraform /usr/local/bin/
 ```
 
-### Problème : Ports déjà utilisés
+### Problem: Ports already in use
 
-Si les ports 3000 (Grafana) ou 9090 (Prometheus) sont occupés :
+If ports 30080 (ArgoCD), 30300 (Grafana), or 30090 (Prometheus) are occupied:
 
 ```bash
-# Identifier le process
-sudo lsof -i :3000
-sudo lsof -i :9090
+# Identify the process
+sudo lsof -i :30080
+sudo lsof -i :30300
 
-# Tuer si nécessaire
+# Kill if necessary
 sudo kill -9 <PID>
+```
+
+### Problem: ArgoCD not syncing
+
+```bash
+# Check Application status
+kubectl -n argocd get applications
+
+# Check ArgoCD logs
+kubectl -n argocd logs -l app.kubernetes.io/name=argocd-server
+
+# Force sync
+kubectl -n argocd patch app monitoring-xxx \
+  --type merge -p '{"operation":{"sync":{}}}'
 ```
 
 ---
 
-## 🎓 Prochaines Étapes
+## 🎓 Next Steps
 
-### 1. Comprendre l'Architecture
+### 1. Understand the Architecture
 
-Lire [ARCHITECTURE.md](ARCHITECTURE.md) pour comprendre :
-- Le système multi-agents
-- Le workflow d'exécution
-- La gestion de l'état
+Read [ARCHITECTURE.md](ARCHITECTURE.md) to understand:
+- The multi-agent system
+- Execution workflow
+- State management
+- GitOps patterns
 
-### 2. Personnaliser la Configuration
+### 2. Customize Configuration
 
-Lire [CONFIGURATION.md](CONFIGURATION.md) pour :
-- Adapter aux besoins spécifiques
-- Configurer le monitoring avancé
-- Gérer les secrets
+Read [CONFIGURATION.md](CONFIGURATION.md) for:
+- Adapting to specific needs
+- Advanced monitoring configuration
+- Managing secrets
+- Platform-specific settings
 
-### 3. Comprendre les Agents
+### 3. Understand the Agents
 
-Lire [AGENTS.md](AGENTS.md) pour :
-- Détail de chaque agent
-- Étendre le système
-- Ajouter des agents
+Read [AGENTS.md](AGENTS.md) for:
+- Details on each agent
+- Extending the system
+- Adding custom agents
 
-### 4. Déployer en Production
+### 4. Deploy to Production
 
 ```bash
-# 1. Configurer les credentials cloud
+# 1. Configure cloud credentials
 # AWS
 aws configure
 
-# 2. Adapter la config production
+# 2. Adapt production config
 cp examples/eks-prod.yaml my-prod-config.yaml
 nano my-prod-config.yaml
 
-# 3. Déployer
-python main.py --config my-prod-config.yaml
+# 3. Deploy
+python main.py --config my-prod-config.yaml --real-deployment
 
-# 4. Vérifier
+# 4. Verify
 kubectl get nodes
+kubectl get applications -n argocd
 ```
 
 ---
@@ -381,7 +427,7 @@ kubectl get nodes
 ### 1. Naming Convention
 
 ```yaml
-# Utiliser des noms descriptifs
+# Use descriptive names
 cluster_name: myapp-prod-eu-west-1
 ```
 
@@ -397,31 +443,44 @@ tags:
 
 ### 3. Monitoring
 
-Toujours activer le monitoring, même en dev :
+Always enable monitoring, even in dev:
 
 ```yaml
 monitoring:
   enabled: true
+  headlamp: true
 ```
 
-### 4. Documentation
+### 4. GitOps
 
-La doc est générée automatiquement. La partager avec l'équipe :
+ArgoCD automatically manages your applications:
+- Self-healing enabled
+- Auto-sync on changes
+- Complete audit trail
+
+### 5. Documentation
+
+Documentation is auto-generated. Share with team:
 
 ```bash
-# Générer et commit
+# Generate and commit
 git add output/docs/
 git commit -m "Add cluster documentation"
 ```
 
-### 5. State Management
+### 6. Cleanup
 
-Pour le travail en équipe, utiliser PostgreSQL :
+Always use the cleanup script:
 
 ```bash
-STATE_BACKEND=postgresql
-STATE_DB_URL=postgresql://user:pass@db-server:5432/terraform_agent
+./cleanup.sh
 ```
+
+This ensures:
+- K3s uninstalled properly
+- Namespaces deleted
+- k3s contexts removed
+- Generated files cleaned
 
 ---
 
@@ -430,35 +489,36 @@ STATE_DB_URL=postgresql://user:pass@db-server:5432/terraform_agent
 ### Documentation
 
 - [README.md](../README.md) - Overview
-- [ARCHITECTURE.md](ARCHITECTURE.md) - Architecture détaillée
-- [AGENTS.md](AGENTS.md) - Documentation des agents
-- [CONFIGURATION.md](CONFIGURATION.md) - Options de configuration
+- [GITOPS.md](../GITOPS.md) - GitOps architecture
+- [ARCHITECTURE.md](ARCHITECTURE.md) - Detailed architecture
+- [AGENTS.md](AGENTS.md) - Agent documentation
+- [CONFIGURATION.md](CONFIGURATION.md) - Configuration options
 
-### Logs
+### Debug Mode
 
 ```bash
-# Activer les logs détaillés
+# Enable detailed logs
 DEBUG=true python main.py ...
 
-# Logs Terraform
+# Terraform logs
 TF_LOG=DEBUG python main.py ...
 ```
 
-### État du Système
+### System State
 
 ```bash
-# Vérifier la base de données d'état
+# Check state database
 sqlite3 ./data/state.db
 
-# Lister les workflows
+# List workflows
 SELECT workflow_id, status, platform FROM workflows;
 
-# Lister les exécutions d'agents
+# List agent executions
 SELECT agent_name, status FROM agent_executions WHERE workflow_id='xxx';
 ```
 
 ---
 
-**Vous êtes prêt !** 🚀
+**You're ready!** 🚀
 
-Commencez par le mode interactif et explorez les fonctionnalités progressivement.
+Start with interactive mode and explore features progressively.

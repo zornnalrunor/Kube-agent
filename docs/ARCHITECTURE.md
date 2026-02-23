@@ -1,28 +1,28 @@
-# Architecture du Système Agentique
+# Agentic System Architecture
 
-## 🏗️ Vue d'Ensemble
+## 🏗️ Overview
 
-Le système Terraform K8s Agent utilise une architecture multi-agents orchestrée par l'IA pour automatiser complètement le déploiement et la configuration de clusters Kubernetes.
+The Terraform K8s Agent system uses an AI-orchestrated multi-agent architecture to fully automate the deployment and configuration of Kubernetes clusters.
 
-## 📐 Principes de Conception
+## 📐 Design Principles
 
-### 1. Séparation des Responsabilités
+### 1. Separation of Responsibilities
 
-Chaque agent a une responsabilité unique et bien définie :
+Each agent has a single, well-defined responsibility:
 
-- **Orchestrator Agent** : Chef d'orchestre
-- **Planner Agent** : Analyse et planification
-- **Infrastructure Agent** : Provisioning Terraform
-- **Monitoring Agent** : Stack d'observabilité
-- **Validation Agent** : Vérifications et tests
-- **Documentation Agent** : Documentation automatique
+- **Orchestrator Agent**: Conductor
+- **Planner Agent**: Analysis and planning
+- **Infrastructure Agent**: Terraform provisioning
+- **Monitoring  Agent**: Observability stack
+- **Validation Agent**: Checks and tests
+- **Documentation Agent**: Automatic documentation
 
-### 2. Communication Inter-Agents
+### 2. Inter-Agent Communication
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │                     STATE MANAGER                             │
-│  (SQLite/PostgreSQL - État centralisé et persistant)         │
+│  (SQLite/PostgreSQL - Centralized and persistent state)      │
 └──────────────────────────────────────────────────────────────┘
          ▲              ▲              ▲              ▲
          │              │              │              │
@@ -40,122 +40,122 @@ Chaque agent a une responsabilité unique et bien définie :
                     └──────────┘
 ```
 
-Les agents communiquent via un **State Manager** centralisé qui :
-- Maintient l'état global du workflow
-- Permet la traçabilité complète
-- Gère la persistance
-- Facilite les rollbacks
+Agents communicate via a centralized **State Manager** that:
+- Maintains global workflow state
+- Enables complete traceability
+- Manages persistence
+- Facilitates rollbacks
 
-### 3. Intelligence Artificielle
+### 3. Artificial Intelligence
 
-Chaque agent utilise un LLM configurable pour :
+Each agent uses a configurable LLM for:
 
 #### Planner Agent
-- Optimiser la configuration selon les best practices
-- Suggérer des améliorations
-- Calculer les ressources nécessaires
+- Optimize configuration according to best practices
+- Suggest improvements
+- Calculate required resources
 
 #### Infrastructure Agent  
-- Générer du code Terraform idiomatique
-- Adapter la config selon la plateforme
-- Diagnostiquer les erreurs Terraform
+- Generate idiomatic Terraform code
+- Adapt config based on platform
+- Diagnose Terraform errors
 
 #### Monitoring Agent
-- Configurer les alertes pertinentes
-- Suggérer des dashboards adaptés
-- Optimiser les métriques collectées
+- Configure relevant alerts
+- Suggest appropriate dashboards
+- Optimize collected metrics
 
 #### Validation Agent
-- Analyser les logs pour diagnostiquer
-- Suggérer des corrections
-- Prioriser les problèmes
+- Analyze logs for diagnosis
+- Suggest corrections
+- Prioritize issues
 
 #### Documentation Agent
-- Générer une documentation contextuelle
-- Créer des runbooks adaptés
-- Documenter les décisions prises
+- Generate contextual documentation
+- Create adapted runbooks
+- Document decisions made
 
-## 🔄 Workflow d'Exécution
+## 🔄 Execution Workflow
 
-### Phases du Workflow
+### Workflow Phases
 
 ```
-1. INITIALISATION
-   ├─ Création du workflow dans le State Manager
-   ├─ Validation des inputs
-   └─ Enregistrement des agents
+1. INITIALIZATION
+   ├─ Create workflow in State Manager
+   ├─ Validate inputs
+   └─ Register agents
 
 2. PLANNING (Planner Agent)
-   ├─ Analyse des requirements
-   ├─ Optimisation via LLM
-   ├─ Génération du plan d'exécution
-   └─ Estimation des ressources/temps
+   ├─ Requirements analysis
+   ├─ Optimization via LLM
+   ├─ Execution plan generation
+   └─ Resource/time estimation
 
 3. PROVISIONING (Infrastructure Agent)
-   ├─ Génération du code Terraform
+   ├─ Terraform code generation
    ├─ Terraform init
    ├─ Terraform plan
    ├─ Terraform apply
-   └─ Récupération des outputs
+   └─ Output retrieval
 
 4. CONFIGURATION (Monitoring Agent)
-   ├─ Génération des manifests K8s
-   ├─ Déploiement Prometheus Operator
-   ├─ Déploiement Grafana
-   ├─ Import des dashboards
-   └─ Configuration des alertes
+   ├─ K8s manifest generation
+   ├─ Prometheus Operator deployment
+   ├─ Grafana deployment
+   ├─ Dashboard import
+   └─ Alert configuration
 
 5. VALIDATION (Validation Agent)
-   ├─ Vérification des nœuds
-   ├─ Vérification des pods
-   ├─ Test des endpoints monitoring
-   ├─ Validation networking
-   └─ Génération du rapport de santé
+   ├─ Node verification
+   ├─ Pod verification
+   ├─ Monitoring endpoints test
+   ├─ Networking validation
+   └─ Health report generation
 
 6. DOCUMENTATION (Documentation Agent)
-   ├─ Génération README
-   ├─ Génération ARCHITECTURE.md
-   ├─ Génération RUNBOOK.md
-   ├─ Génération TROUBLESHOOTING.md
-   └─ Export des configurations
+   ├─ README generation
+   ├─ ARCHITECTURE.md generation
+   ├─ RUNBOOK.md generation
+   ├─ TROUBLESHOOTING.md generation
+   └─ Configuration export
 
-7. FINALISATION
-   ├─ Mise à jour du workflow (COMPLETED/FAILED)
-   ├─ Sauvegarde de l'état final
-   └─ Génération du rapport
+7. FINALIZATION
+   ├─ Workflow update (COMPLETED/FAILED)
+   ├─ Final state save
+   └─ Report generation
 ```
 
-### Gestion des Erreurs
+### Error Handling
 
 ```python
-# Chaque agent implémente la gestion d'erreur
+# Each agent implements error handling
 try:
     result = agent.execute(input)
 except Exception as e:
-    # Log l'erreur
-    # Met à jour le state
-    # Décide rollback ou continue
+    # Log error
+    # Update state
+    # Decide rollback or continue
     handle_error(e)
 ```
 
-Décisions selon la criticité :
-- **Agent critique** (Planner, Infrastructure) : Arrêt du workflow
-- **Agent non-critique** (Documentation) : Warning et continuation
+Decisions based on criticality:
+- **Critical agent** (Planner, Infrastructure): Workflow stop
+- **Non-critical agent** (Documentation): Warning and continue
 
-### Rollback Automatique
+### Automatic Rollback
 
-En cas d'échec critique :
-1. Détection de l'erreur
-2. Sauvegarde de l'état actuel
-3. Exécution de `terraform destroy`
-4. Nettoyage des ressources
-5. Notification à l'utilisateur
+On critical failure:
+1. Error detection
+2. Current state save
+3. Execute `terraform destroy`
+4. Resource cleanup
+5. User notification
 
-## 🗄️ Gestion de l'État
+## 🗄️ State Management
 
-### Schéma de Base de Données
+### Database Schema
 
-#### Table `workflows`
+#### `workflows` Table
 ```sql
 CREATE TABLE workflows (
     id INTEGER PRIMARY KEY,
@@ -171,7 +171,7 @@ CREATE TABLE workflows (
 );
 ```
 
-#### Table `agent_executions`
+#### `agent_executions` Table
 ```sql
 CREATE TABLE agent_executions (
     id INTEGER PRIMARY KEY,
@@ -188,12 +188,12 @@ CREATE TABLE agent_executions (
 );
 ```
 
-### Backends Supportés
+### Supported Backends
 
-1. **SQLite** (par défaut)
-   - Parfait pour dev/test
+1. **SQLite** (default)
+   - Perfect for dev/test
    - Zero configuration
-   - Fichier local
+   - Local file
 
 2. **PostgreSQL**
    - Production ready
@@ -203,11 +203,11 @@ CREATE TABLE agent_executions (
 3. **File**
    - Simple JSON
    - Portable
-   - Debug facile
+   - Easy debug
 
-## 🤖 Provider LLM
+## 🤖 LLM Provider
 
-Architecture modulaire permettant plusieurs providers :
+Modular architecture supporting multiple providers:
 
 ```python
 class LLMProviderInterface(ABC):
@@ -216,15 +216,15 @@ class LLMProviderInterface(ABC):
         pass
 
 class OpenAIProvider(LLMProviderInterface):
-    # Implémentation OpenAI
+    # OpenAI implementation
     ...
 
 class AnthropicProvider(LLMProviderInterface):
-    # Implémentation Anthropic
+    # Anthropic implementation
     ...
 
 class OllamaProvider(LLMProviderInterface):
-    # Implémentation Ollama (local)
+    # Ollama implementation (local)
     ...
 ```
 
@@ -232,22 +232,22 @@ class OllamaProvider(LLMProviderInterface):
 
 ```python
 # .env
-LLM_PROVIDER=openai  # ou anthropic, ollama
+LLM_PROVIDER=openai  # or anthropic, ollama
 OPENAI_API_KEY=sk-...
 ```
 
-## 📊 Monitoring de l'Agent System
+## 📊 Agent System Monitoring
 
-Le système se monitore lui-même :
+The system monitors itself:
 
-### Métriques Collectées
+### Collected Metrics
 
-- Temps d'exécution par agent
-- Taux de succès/échec
-- Utilisation des ressources
-- Appels LLM (count, latency, tokens)
+- Execution time per agent
+- Success/failure rate
+- Resource utilization
+- LLM calls (count, latency, tokens)
 
-### Logs Structurés
+### Structured Logs
 
 ```python
 {
@@ -260,11 +260,11 @@ Le système se monitore lui-même :
 }
 ```
 
-## 🔐 Sécurité
+## 🔐 Security
 
 ### Secrets Management
 
-1. **Variables d'environnement**
+1. **Environment variables**
    ```bash
    export OPENAI_API_KEY=sk-...
    export AWS_ACCESS_KEY_ID=...
@@ -284,67 +284,67 @@ Le système se monitore lui-même :
 
 ### RBAC
 
-Le système génère des RBAC Kubernetes par défaut :
-- ServiceAccounts dédiés
-- Roles avec least privilege
-- RoleBindings explicites
+The system generates Kubernetes RBAC by default:
+- Dedicated ServiceAccounts
+- Least privilege Roles
+- Explicit RoleBindings
 
 ## 🚀 Performance
 
-### Optimisations
+### Optimizations
 
 1. **Parallel Execution**
-   - Agents indépendants exécutés en parallèle
-   - Terraform parallelism configuré
+   - Independent agents executed in parallel
+   - Terraform parallelism configured
 
 2. **Caching**
-   - State Terraform local
-   - Images Docker pré-pullées
-   - Plans Terraform cachés
+   - Local Terraform state
+   - Pre-pulled Docker images
+   - Cached Terraform plans
 
 3. **Incremental Updates**
-   - Seules les ressources modifiées sont re-appliquées
-   - Détection des drifts
+   - Only modified resources are re-applied
+   - Drift detection
 
-## 🔄 Extensibilité
+## 🔄 Extensibility
 
-### Ajouter un Nouvel Agent
+### Adding a New Agent
 
 ```python
-# 1. Créer la classe
+# 1. Create class
 class MyNewAgent(BaseAgent):
     def execute(self, agent_input: AgentInput) -> AgentOutput:
         # Implementation
         ...
 
-# 2. Enregistrer dans l'orchestrateur
+# 2. Register in orchestrator
 orchestrator.register_agent("mynew", MyNewAgent(config, state_manager))
 
-# 3. Ajouter dans le workflow
+# 3. Add to workflow
 workflow_steps.append(("mynew", "Description"))
 ```
 
-### Ajouter un Nouveau Provider Cloud
+### Adding a New Cloud Provider
 
 ```python
-# 1. Créer le module Terraform
+# 1. Create Terraform module
 terraform/gke/main.tf
 
-# 2. Adapter l'Infrastructure Agent
+# 2. Adapt Infrastructure Agent
 if platform == "gke":
-    # Logic spécifique GKE
+    # GKE specific logic
     ...
 ```
 
-## 📈 Métriques de Succès
+## 📈 Success Metrics
 
-### KPIs du Système
+### System KPIs
 
-- **Time to Cluster**: < 10 minutes pour K3s, < 20 min pour EKS/AKS
+- **Time to Cluster**: < 10 minutes for K3s, < 20 min for EKS/AKS
 - **Success Rate**: > 95%
-- **Monitoring Coverage**: 100% des composants critiques
-- **Documentation Quality**: Automatiquement générée et à jour
+- **Monitoring Coverage**: 100% of critical components
+- **Documentation Quality**: Automatically generated and up-to-date
 
 ---
 
-**Next**: Voir [AGENTS.md](AGENTS.md) pour le détail de chaque agent
+**Next**: See [AGENTS.md](AGENTS.md) for details on each agent

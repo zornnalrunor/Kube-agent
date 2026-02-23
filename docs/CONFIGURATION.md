@@ -1,10 +1,10 @@
-# Guide de Configuration
+# Configuration Guide
 
-## 🎛️ Configuration Globale
+## 🎛️ Global Configuration
 
-### Fichier .env
+### .env File
 
-Copiez `.env.example` vers `.env` et configurez :
+Copy `.env.example` to `.env` and configure:
 
 ```bash
 cp .env.example .env
@@ -13,7 +13,7 @@ nano .env
 
 ### LLM Provider
 
-#### Option 1 : OpenAI (Recommandé pour production)
+#### Option 1: OpenAI (Recommended for production)
 
 ```bash
 LLM_PROVIDER=openai
@@ -21,17 +21,17 @@ LLM_MODEL=gpt-4-turbo-preview
 OPENAI_API_KEY=sk-your-key-here
 ```
 
-**Avantages** :
-- Très performant
-- Fiable
+**Pros**:
+- High performance
+- Reliable
 - Multimodal
 
-**Inconvénients** :
-- Coût par token
-- Nécessite connexion internet
-- Dépendance externe
+**Cons**:
+- Cost per token
+- Requires internet connection
+- External dependency
 
-#### Option 2 : Anthropic Claude
+#### Option 2: Anthropic Claude
 
 ```bash
 LLM_PROVIDER=anthropic
@@ -39,12 +39,12 @@ LLM_MODEL=claude-3-sonnet-20240229
 ANTHROPIC_API_KEY=sk-ant-your-key-here
 ```
 
-**Avantages** :
-- Excellentes capacités d'analyse
-- Bon contexte (200K tokens)
-- Sécurité & privacy
+**Pros**:
+- Excellent analysis capabilities
+- Good context (200K tokens)
+- Security & privacy
 
-#### Option 3 : Ollama (Local/Gratuit)
+#### Option 3: Ollama (Local/Free)
 
 ```bash
 LLM_PROVIDER=ollama
@@ -52,87 +52,87 @@ OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODEL=llama2
 ```
 
-**Avantages** :
-- Gratuit
-- Local (pas de dépendance externe)
-- Privacy totale
+**Pros**:
+- Free
+- Local (no external dependency)
+- Total privacy
 
-**Inconvénients** :
-- Nécessite GPU pour de bonnes perfs
-- Qualité variable selon le modèle
-- Installation supplémentaire
+**Cons**:
+- Requires GPU for good performance
+- Variable quality by model
+- Additional installation
 
-**Installation Ollama** :
+**Ollama Installation**:
 
 ```bash
 # Linux
 curl -fsSL https://ollama.ai/install.sh | sh
 
-# Télécharger un modèle
+# Download a model
 ollama pull llama2
 
-# Lancer le serveur (si pas déjà démarré)
+# Start server (if not already running)
 ollama serve
 ```
 
 ### State Management
 
-#### Option 1 : SQLite (Par défaut)
+#### Option 1: SQLite (Default)
 
 ```bash
 STATE_BACKEND=sqlite
 STATE_DB_PATH=./data/state.db
 ```
 
-**Usage** : Dev, test, single-user
+**Usage**: Dev, test, single-user
 
-#### Option 2 : PostgreSQL
+#### Option 2: PostgreSQL
 
 ```bash
 STATE_BACKEND=postgresql
 STATE_DB_URL=postgresql://user:password@localhost:5432/terraform_agent
 ```
 
-**Usage** : Production, multi-instance, team
+**Usage**: Production, multi-instance, team
 
-**Setup PostgreSQL** :
+**PostgreSQL Setup**:
 
 ```bash
-# Créer la base
+# Create database
 createdb terraform_agent
 
-# Créer l'utilisateur
+# Create user
 createuser terraform_agent_user -P
 
 # Grant permissions
 psql -d terraform_agent -c "GRANT ALL PRIVILEGES ON DATABASE terraform_agent TO terraform_agent_user;"
 ```
 
-#### Option 3 : File
+#### Option 3: File
 
 ```bash
 STATE_BACKEND=file
 ```
 
-Simple fichier JSON. **Usage** : Debug uniquement.
+Simple JSON file. **Usage**: Debug only.
 
 ---
 
-## 📝 Configuration par Fichier YAML
+## 📝 YAML File Configuration
 
 ### Structure
 
 ```yaml
-# Plateforme (obligatoire)
+# Platform (required)
 platform: k3s  # k3s, eks, aks
 
-# Environnement (obligatoire)
+# Environment (required)
 environment: development  # development, staging, production
 
-# Nœuds
+# Nodes
 nodes: 3
 
-# Ressources par nœud
+# Resources per node
 resources:
   memory: 4Gi
   cpu: 2
@@ -152,7 +152,7 @@ monitoring:
     - kubernetes-cluster
     - node-exporter
 
-# Sécurité
+# Security
 security:
   rbac_enabled: true
   network_policies: false
@@ -165,11 +165,11 @@ addons:
   cert_manager: false
 ```
 
-### Exemples par Plateforme
+### Platform Examples
 
 #### K3s (Local/Dev)
 
-Voir [`examples/k3s-local.yaml`](../examples/k3s-local.yaml)
+See [`examples/k3s-local.yaml`](../examples/k3s-local.yaml)
 
 ```yaml
 platform: k3s
@@ -178,11 +178,11 @@ nodes: 3
 
 k3s_config:
   disable:
-    - traefik  # On utilise nginx
+    - traefik  # Using nginx instead
   write_kubeconfig_mode: "644"
 ```
 
-**Usage** :
+**Usage**:
 
 ```bash
 python main.py --config examples/k3s-local.yaml
@@ -190,7 +190,7 @@ python main.py --config examples/k3s-local.yaml
 
 #### EKS (AWS Production)
 
-Voir [`examples/eks-prod.yaml`](../examples/eks-prod.yaml)
+See [`examples/eks-prod.yaml`](../examples/eks-prod.yaml)
 
 ```yaml
 platform: eks
@@ -210,13 +210,13 @@ eks_config:
     - audit
 ```
 
-**Prérequis** :
+**Prerequisites**:
 
 ```bash
-# AWS CLI configuré
+# AWS CLI configured
 aws configure
 
-# Ou variables d'environnement
+# Or environment variables
 export AWS_ACCESS_KEY_ID=...
 export AWS_SECRET_ACCESS_KEY=...
 export AWS_DEFAULT_REGION=eu-west-1
@@ -224,7 +224,7 @@ export AWS_DEFAULT_REGION=eu-west-1
 
 #### AKS (Azure)
 
-Voir [`examples/aks-dev.yaml`](../examples/aks-dev.yaml)
+See [`examples/aks-dev.yaml`](../examples/aks-dev.yaml)
 
 ```yaml
 platform: aks
@@ -242,13 +242,13 @@ aks_config:
   identity_type: SystemAssigned
 ```
 
-**Prérequis** :
+**Prerequisites**:
 
 ```bash
 # Azure CLI
 az login
 
-# Ou variables d'environnement
+# Or environment variables
 export ARM_CLIENT_ID=...
 export ARM_CLIENT_SECRET=...
 export ARM_SUBSCRIPTION_ID=...
@@ -257,9 +257,9 @@ export ARM_TENANT_ID=...
 
 ---
 
-## ⚙️ Options Avancées
+## ⚙️ Advanced Options
 
-### Monitoring Personnalisé
+### Custom Monitoring
 
 ```yaml
 monitoring:
@@ -270,25 +270,25 @@ monitoring:
   alerting: true
   slack_webhook: https://hooks.slack.com/services/XXX
   
-  # Dashboards personnalisés
+  # Custom dashboards
   dashboards:
     - kubernetes-cluster
     - node-exporter
-    - custom-app-metrics  # Votre dashboard
+    - custom-app-metrics  # Your dashboard
   
-  # Configuration Prometheus
+  # Prometheus configuration
   prometheus:
     scrape_interval: 30s
     evaluation_interval: 30s
     
-  # Configuration Grafana
+  # Grafana configuration
   grafana:
     admin_password: SecurePassword123!
     plugins:
       - grafana-piechart-panel
 ```
 
-### Sécurité Avancée
+### Advanced Security
 
 ```yaml
 security:
@@ -312,7 +312,7 @@ security:
   audit_logging: true
 ```
 
-### Networking Avancé
+### Advanced Networking
 
 ```yaml
 networking:
@@ -323,7 +323,7 @@ networking:
   # CNI
   cni_plugin: calico  # flannel, calico, weave
   
-  # Service Mesh (optionnel)
+  # Service Mesh (optional)
   service_mesh:
     enabled: true
     provider: istio  # istio, linkerd
@@ -383,7 +383,7 @@ autoscaling:
 
 ## 🏷️ Tags & Labels
 
-### Tags Cloud (EKS/AKS)
+### Cloud Tags (EKS/AKS)
 
 ```yaml
 tags:
@@ -394,7 +394,7 @@ tags:
   Owner: platform-team
 ```
 
-### Labels Kubernetes
+### Kubernetes Labels
 
 ```yaml
 labels:
@@ -406,31 +406,31 @@ labels:
 
 ---
 
-## 🔧 Configuration des Agents
+## 🔧 Agent Configuration
 
 ### Timeouts
 
 ```bash
 # .env
 AGENT_MAX_ITERATIONS=10
-AGENT_TIMEOUT=3600  # secondes (1h)
+AGENT_TIMEOUT=3600  # seconds (1h)
 ```
 
 ### Verbosity
 
 ```bash
 # .env
-DEBUG=true  # Active les logs détaillés
-TF_LOG=DEBUG  # Logs Terraform détaillés
+DEBUG=true  # Enable detailed logs
+TF_LOG=DEBUG  # Detailed Terraform logs
 ```
 
 ---
 
-## 📊 Configuration du Monitoring
+## 📊 Monitoring Configuration
 
 ### Prometheus
 
-Custom configuration via ConfigMap :
+Custom configuration via ConfigMap:
 
 ```yaml
 monitoring:
@@ -450,7 +450,7 @@ monitoring:
 ```yaml
 monitoring:
   grafana:
-    # Datasources supplémentaires
+    # Additional datasources
     datasources:
       - name: Loki
         type: loki
@@ -485,11 +485,11 @@ monitoring:
 
 ---
 
-## 🚀 Profils Pré-configurés
+## 🚀 Pre-configured Profiles
 
-### Profil "Quick Start"
+### "Quick Start" Profile
 
-Minimal, rapide, pour tests :
+Minimal, fast, for testing:
 
 ```bash
 python main.py create \
@@ -498,17 +498,17 @@ python main.py create \
   --monitoring false
 ```
 
-### Profil "Development"
+### "Development" Profile
 
-Dev local avec monitoring :
+Local dev with monitoring:
 
 ```bash
 python main.py --config examples/k3s-local.yaml
 ```
 
-### Profil "Production"
+### "Production" Profile
 
-HA, monitoring avancé, sécurité :
+HA, advanced monitoring, security:
 
 ```bash
 python main.py --config examples/eks-prod.yaml
@@ -516,59 +516,59 @@ python main.py --config examples/eks-prod.yaml
 
 ---
 
-## 📁 Hiérarchie des Configurations
+## 📁 Configuration Hierarchy
 
-Ordre de priorité (du plus haut au plus bas) :
+Priority order (highest to lowest):
 
-1. **Arguments CLI** : `--nodes 5`
-2. **Fichier YAML** : `--config config.yaml`
-3. **Variables d'environnement** : `.env`
-4. **Valeurs par défaut** : Dans le code
+1. **CLI Arguments**: `--nodes 5`
+2. **YAML File**: `--config config.yaml`
+3. **Environment Variables**: `.env`
+4. **Default Values**: In code
 
-Exemple :
+Example:
 
 ```bash
-# nodes=5 (CLI override le YAML)
+# nodes=5 (CLI overrides YAML)
 python main.py --config examples/k3s-local.yaml --nodes 5
 ```
 
 ---
 
-## ✅ Validation de Configuration
+## ✅ Configuration Validation
 
-Avant de lancer, validez votre config :
+Before launching, validate your config:
 
 ```bash
-# Dry-run (plan seulement, pas d'apply)
+# Dry-run (plan only, no apply)
 DEBUG=true python main.py --config my-config.yaml
 ```
 
-L'agent Planner validera et optimisera la config.
+The Planner agent will validate and optimize the config.
 
 ---
 
-## 🔍 Troubleshooting Configuration
+## 🔍 Configuration Troubleshooting
 
-### Problème : LLM ne répond pas
+### Issue: LLM not responding
 
 ```bash
-# Vérifier la config
+# Check config
 echo $OPENAI_API_KEY
 
-# Tester manuellement
+# Test manually
 curl https://api.openai.com/v1/models \
   -H "Authorization: Bearer $OPENAI_API_KEY"
 ```
 
-### Problème : Terraform errors
+### Issue: Terraform errors
 
 ```bash
-# Augmenter la verbosity
+# Increase verbosity
 export TF_LOG=DEBUG
 python main.py ...
 ```
 
-### Problème : State database locked
+### Issue: State database locked
 
 ```bash
 # SQLite
@@ -580,4 +580,4 @@ psql -d terraform_agent -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activi
 
 ---
 
-**Next**: Voir le [README.md](../README.md) principal pour les cas d'usage
+**Next**: See main [README.md](../README.md) for use cases

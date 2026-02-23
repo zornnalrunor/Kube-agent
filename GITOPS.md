@@ -1,8 +1,8 @@
-# Architecture GitOps avec ArgoCD
+# GitOps Architecture with ArgoCD
 
-## 🚀 Vue d'ensemble
+## 🚀 Overview
 
-Le système a été étendu avec une couche **GitOps** utilisant **ArgoCD** pour gérer tous les déploiements applicatifs (monitoring, futures applications).
+The system has been extended with a **GitOps** layer using **ArgoCD** to manage all application deployments (monitoring, future applications).
 
 ## 📋 Architecture
 
@@ -18,16 +18,16 @@ Le système a été étendu avec une couche **GitOps** utilisant **ArgoCD** pour
     │   Agent   │   │   Agent    │  │    Agent    │
     └───────────┘   └────────────┘  └─────────────┘
                            │               │
-                           │         Installe ArgoCD
+                           │         Installs ArgoCD
                            │         App of Apps
                            │               │
                            ▼               ▼
                     ┌─────────────────────────────┐
                     │   Monitoring Agent          │
                     │  (GitOps Mode)              │
-                    │   - Génère manifests        │
-                    │   - Crée Git repo local     │
-                    │   - Crée ArgoCD Apps        │
+                    │   - Generate manifests      │
+                    │   - Create local Git repo   │
+                    │   - Create ArgoCD Apps      │
                     └─────────────────────────────┘
                                    │
                                    ▼
@@ -39,18 +39,18 @@ Le système a été étendu avec une couche **GitOps** utilisant **ArgoCD** pour
                     └─────────────────────────────┘
 ```
 
-## 🔄 Workflow GitOps
+## 🔄 GitOps Workflow
 
 ### 1. **Infrastructure Agent** (Unchanged)
-- Déploie K3s avec Terraform
-- Génère le kubeconfig
-- Configure le réseau
+- Deploys K3s with Terraform
+- Generates kubeconfig
+- Configures network
 
-### 2. **ArgoCD Agent** (NOUVEAU)
-- Installe ArgoCD dans le namespace `argocd`
-- Configure le NodePort pour accès UI (port 30080)
-- Récupère le mot de passe admin initial
-- Prépare l'infrastructure App of Apps
+### 2. **ArgoCD Agent** (NEW)
+- Installs ArgoCD in `argocd` namespace
+- Configures NodePort for UI access (port 30080)
+- Retrieves initial admin password
+- Prepares App of Apps infrastructure
 
 **Outputs:**
 ```python
@@ -63,14 +63,14 @@ Le système a été étendu avec une couche **GitOps** utilisant **ArgoCD** pour
 }
 ```
 
-### 3. **Monitoring Agent** (MODIFIÉ - GitOps Mode)
+### 3. **Monitoring Agent** (MODIFIED - GitOps Mode)
 
-#### Mode GitOps (si ArgoCD installé):
-1. **Génère les manifests Kubernetes** (inchangé)
+#### GitOps Mode (if ArgoCD installed):
+1. **Generate Kubernetes manifests** (unchanged)
    - Prometheus, Grafana, Headlamp
    - Namespaces, ConfigMaps, Services
 
-2. **Crée un repo Git local**
+2. **Create local Git repo**
    ```
    output/gitops/{workflow-id}/
    ├── .git/
@@ -78,10 +78,10 @@ Le système a été étendu avec une couche **GitOps** utilisant **ArgoCD** pour
    │   ├── 00-namespace.yaml
    │   ├── 10-prometheus.yaml
    │   ├── 20-grafana.yaml
-   │   └── 25-headlamp.yaml (si activé)
+   │   └── 25-headlamp.yaml (if enabled)
    ```
 
-3. **Crée une ArgoCD Application**
+3. **Create ArgoCD Application**
    ```yaml
    apiVersion: argoproj.io/v1alpha1
    kind: Application
@@ -103,60 +103,60 @@ Le système a été étendu avec une couche **GitOps** utilisant **ArgoCD** pour
          selfHeal: true
    ```
 
-4. **ArgoCD sync automatiquement** les ressources
+4. **ArgoCD automatically syncs** resources
 
-#### Mode Direct (fallback si pas ArgoCD):
-- Déploiement kubectl direct (ancien comportement)
+#### Direct Mode (fallback if no ArgoCD):
+- Direct kubectl deployment (old behavior)
 
-### 4. **Validation Agent** (MODIFIÉ)
+### 4. **Validation Agent** (MODIFIED)
 
-Ajoute des checks ArgoCD:
-- ✅ Pods ArgoCD running
+Adds ArgoCD checks:
+- ✅ ArgoCD pods running
 - ✅ Applications synced
 - ✅ Applications healthy
-- ✅ Health score incluant ArgoCD
+- ✅ Health score including ArgoCD
 
-## 🎯 Avantages de cette architecture
+## 🎯 Architecture Benefits
 
-### ✅ Séparation des responsabilités
-- **Infrastructure**: Réseau, K3s (Terraform)
-- **GitOps**: Tout le reste (ArgoCD)
+### ✅ Separation of responsibilities
+- **Infrastructure**: Network, K3s (Terraform)
+- **GitOps**: Everything else (ArgoCD)
 
-### ✅ Traçabilité Git
-- Tous les manifests versionnés dans Git
-- Historique complet des changements
-- Rollback facile
+### ✅ Git traceability
+- All manifests versioned in Git
+- Complete change history
+- Easy rollback
 
-### ✅ Reconciliation automatique
-- Self-heal: ArgoCD recrée les ressources supprimées
-- Prune: Supprime les ressources obsolètes
-- Sync automatique sur changement
+### ✅ Automatic reconciliation
+- Self-heal: ArgoCD recreates deleted resources
+- Prune: Removes obsolete resources
+- Automatic sync on changes
 
-### ✅ Extensibilité
-- Ajout facile de nouvelles applications
-- Pattern App of Apps pour structurer
-- Multi-environnements simple
+### ✅ Extensibility
+- Easy addition of new applications
+- App of Apps pattern for structure
+- Simple multi-environment
 
-### ✅ Visibilité
-- UI ArgoCD pour voir l'état des déploiements
+### ✅ Visibility
+- ArgoCD UI to see deployment state
 - Drift detection
-- Logs centralisés
+- Centralized logs
 
-## 🔧 Utilisation
+## 🔧 Usage
 
-### Mode Démo (simulation)
+### Demo Mode (simulation)
 ```bash
 python main.py create -p k3s -n 2 --monitoring --headlamp
 ```
 
-### Mode Réel (installation complète)
+### Real Mode (complete installation)
 ```bash
 python main.py create -p k3s -n 2 --monitoring --headlamp --real-deployment
 ```
 
-### Accès aux UIs
+### UI Access
 
-Après déploiement en mode réel:
+After deployment in real mode:
 
 | Service    | URL                      | Credentials      |
 |------------|--------------------------|------------------|
@@ -165,18 +165,18 @@ Après déploiement en mode réel:
 | Prometheus | http://localhost:30090   | -                |
 | Headlamp   | http://localhost:30466   | In-cluster auth  |
 
-**Récupérer le mot de passe ArgoCD:**
+**Retrieve ArgoCD password:**
 ```bash
 kubectl -n argocd get secret argocd-initial-admin-secret \
   -o jsonpath="{.data.password}" | base64 -d
 ```
 
-## 📁 Structure des fichiers
+## 📁 File Structure
 
 ```
 output/
 ├── gitops/
-│   └── {workflow-id}/          # Repo Git local
+│   └── {workflow-id}/          # Local Git repo
 │       ├── .git/
 │       └── monitoring/
 │           ├── 00-namespace.yaml
@@ -185,28 +185,28 @@ output/
 │           └── 25-headlamp.yaml
 ├── argocd-apps/
 │   └── {workflow-id}/
-│       └── monitoring-app.yaml  # Application ArgoCD
+│       └── monitoring-app.yaml  # ArgoCD Application
 └── manifests/
     └── {workflow-id}/
-        └── monitoring/          # Manifests originaux
+        └── monitoring/          # Original manifests
 ```
 
-## 🔮 Évolutions futures
+## 🔮 Future Evolutions
 
-### App of Apps complet
+### Complete App of Apps
 ```
 root/
-├── argocd/          # ArgoCD s'auto-gère
-├── monitoring/      # Stack monitoring
+├── argocd/          # ArgoCD self-management
+├── monitoring/      # Monitoring stack
 ├── apps/
-│   ├── webapp/      # Applications métier
+│   ├── webapp/      # Business applications
 │   ├── database/
 │   └── cache/
 ```
 
 ### Multi-sources
-- Manifests depuis Git distant (GitHub/GitLab)
-- Helm charts depuis registries
+- Manifests from remote Git (GitHub/GitLab)
+- Helm charts from registries
 - Kustomize overlays
 
 ### Multi-clusters
@@ -214,34 +214,34 @@ root/
 - Cluster generators
 - Matrix generators
 
-### CI/CD intégration
-- Webhooks sur Git push
-- Image updater automatique
+### CI/CD integration
+- Webhooks on Git push
+- Automatic image updater
 - Progressive delivery (Argo Rollouts)
 
 ## 🐛 Troubleshooting
 
-### ArgoCD ne synchro pas
+### ArgoCD not syncing
 ```bash
-# Forcer un refresh
+# Force refresh
 kubectl -n argocd get app monitoring-{workflow-id} -o yaml
 argocd app sync monitoring-{workflow-id}
 ```
 
-### Pods en CrashLoop
+### Pods in CrashLoop
 ```bash
-# Logs ArgoCD
+# ArgoCD logs
 kubectl -n argocd logs -l app.kubernetes.io/name=argocd-server
 
-# Logs Application
+# Application logs
 kubectl -n monitoring logs -l app=prometheus
 ```
 
-### Repo Git local non trouvé
-- Vérifier que le path absolu est correct dans l'Application
-- Vérifier que ArgoCD peut accéder au filesystem (permissions)
+### Local Git repo not found
+- Verify absolute path is correct in Application
+- Verify ArgoCD can access filesystem (permissions)
 
-## 📚 Références
+## 📚 References
 
 - [ArgoCD Documentation](https://argo-cd.readthedocs.io/)
 - [App of Apps Pattern](https://argo-cd.readthedocs.io/en/stable/operator-manual/cluster-bootstrapping/)

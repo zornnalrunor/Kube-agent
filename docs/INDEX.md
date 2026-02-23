@@ -1,53 +1,53 @@
-# 🚀 Terraform K8s Agent - Guide Complet
+# 🚀 Terraform K8s Agent - Complete Guide
 
-## 📚 Table des Matières
+## 📚 Table of Contents
 
-### Documentation Principale
+### Main Documentation
 
-1. **[README.md](../README.md)** - Vue d'ensemble et quick start
-2. **[QUICKSTART.md](QUICKSTART.md)** - Démarrage rapide en 5 minutes
-3. **[ARCHITECTURE.md](ARCHITECTURE.md)** - Architecture du système agentique
-4. **[AGENTS.md](AGENTS.md)** - Documentation détaillée des agents
-5. **[CONFIGURATION.md](CONFIGURATION.md)** - Toutes les options de configuration
+1. **[README.md](../README.md)** - Overview and quick start
+2. **[QUICKSTART.md](QUICKSTART.md)** - 5-minute quick start
+3. **[ARCHITECTURE.md](ARCHITECTURE.md)** - Agent system architecture
+4. **[AGENTS.md](AGENTS.md)** - Detailed agent documentation
+5. **[CONFIGURATION.md](CONFIGURATION.md)** - All configuration options
 
-### Guides Pratiques
+### Practical Guides
 
 - **Setup & Installation** → [QUICKSTART.md](QUICKSTART.md)
-- **Configuration LLM** → [CONFIGURATION.md#llm-provider](CONFIGURATION.md)
-- **Déploiement K3s** → [Examples](../examples/k3s-local.yaml)
-- **Déploiement EKS** → [Examples](../examples/eks-prod.yaml)
-- **Déploiement AKS** → [Examples](../examples/aks-dev.yaml)
-- **Contribution** → [CONTRIBUTING.md](../CONTRIBUTING.md)
+- **LLM Configuration** → [CONFIGURATION.md#llm-provider](CONFIGURATION.md)
+- **K3s Deployment** → [Examples](../examples/k3s-local.yaml)
+- **EKS Deployment** → [Examples](../examples/eks-prod.yaml)
+- **AKS Deployment** → [Examples](../examples/aks-dev.yaml)
+- **Contributing** → [CONTRIBUTING.md](../CONTRIBUTING.md)
 
 ---
 
-## 🎯 Par Cas d'Usage
+## 🎯 By Use Case
 
-### Je veux... tester rapidement en local
+### I want to... test quickly locally
 
 ```bash
-# Mode interactif
+# Interactive mode
 python main.py
 
-# Ou direct
+# Or direct
 python main.py create --platform k3s --nodes 1 --no-monitoring
 ```
 
-📖 Lire : [QUICKSTART.md](QUICKSTART.md)
+📖 Read: [QUICKSTART.md](QUICKSTART.md)
 
-### Je veux... comprendre l'architecture
+### I want to... understand the architecture
 
-L'architecture utilise 6 agents spécialisés orchestrés par l'IA :
+The architecture uses 6 specialized agents orchestrated by AI:
 
 ```
 Orchestrator → Planner → Infrastructure → Monitoring → Validation → Documentation
 ```
 
-📖 Lire : [ARCHITECTURE.md](ARCHITECTURE.md)
+📖 Read: [ARCHITECTURE.md](ARCHITECTURE.md)
 
-### Je veux... personnaliser la configuration
+### I want to... customize the configuration
 
-Créer un fichier YAML avec votre config :
+Create a YAML file with your config:
 
 ```yaml
 platform: k3s
@@ -58,47 +58,47 @@ monitoring:
   retention: 15d
 ```
 
-📖 Lire : [CONFIGURATION.md](CONFIGURATION.md)
+📖 Read: [CONFIGURATION.md](CONFIGURATION.md)
 
-### Je veux... déployer en production (EKS/AKS)
+### I want to... deploy to production (EKS/AKS)
 
-1. Configurer les credentials cloud
-2. Adapter la config depuis `examples/`
-3. Lancer le déploiement
+1. Configure cloud credentials
+2. Adapt config from `examples/`
+3. Launch deployment
 
-📖 Lire : [QUICKSTART.md#production](QUICKSTART.md)
+📖 Read: [QUICKSTART.md#production](QUICKSTART.md)
 
-### Je veux... utiliser un LLM local gratuit
+### I want to... use a free local LLM
 
-Configurer Ollama :
+Configure Ollama:
 
 ```bash
-# Installer
+# Install
 curl -fsSL https://ollama.ai/install.sh | sh
 
-# Télécharger un modèle
+# Download a model
 ollama pull llama2
 
-# Configurer dans .env
+# Configure in .env
 LLM_PROVIDER=ollama
 ```
 
-📖 Lire : [CONFIGURATION.md#llm-provider](CONFIGURATION.md)
+📖 Read: [CONFIGURATION.md#llm-provider](CONFIGURATION.md)
 
-### Je veux... contribuer
+### I want to... contribute
 
-1. Fork le repo
-2. Créer une branche
-3. Développer + tests
+1. Fork the repo
+2. Create a branch
+3. Develop + tests
 4. Pull Request
 
-📖 Lire : [CONTRIBUTING.md](../CONTRIBUTING.md)
+📖 Read: [CONTRIBUTING.md](../CONTRIBUTING.md)
 
 ---
 
-## 🏗️ Architecture en Bref
+## 🏗️ Architecture Overview
 
-### Système Multi-Agents
+### Multi-Agent System
 
 ```mermaid
 graph TD
@@ -124,155 +124,155 @@ graph TD
     J -.-> G
 ```
 
-Chaque agent :
-- ✅ A une responsabilité unique
-- ✅ Communique via le State Manager
-- ✅ Utilise l'IA pour optimiser
-- ✅ Gère les erreurs
-- ✅ Log toutes les actions
+Each agent:
+- ✅ Has a single responsibility
+- ✅ Communicates via State Manager
+- ✅ Uses AI for optimization
+- ✅ Handles errors
+- ✅ Logs all actions
 
-📖 Lire : [ARCHITECTURE.md](ARCHITECTURE.md)
+📖 Read: [ARCHITECTURE.md](ARCHITECTURE.md)
 
-### Workflow d'Exécution
+### Execution Workflow
 
 ```
 1. PLANNING (Planner Agent)
-   ├─ Analyse des requirements
-   ├─ Optimisation IA de la config
-   └─ Génération du plan
+   ├─ Requirements analysis
+   ├─ AI-powered config optimization
+   └─ Plan generation
 
 2. PROVISIONING (Infrastructure Agent)
-   ├─ Génération code Terraform
+   ├─ Terraform code generation
    ├─ Terraform init/plan/apply
-   └─ Récupération outputs
+   └─ Output retrieval
 
 3. MONITORING (Monitoring Agent)
-   ├─ Déploiement Prometheus
-   ├─ Déploiement Grafana
-   └─ Import dashboards
+   ├─ Prometheus deployment
+   ├─ Grafana deployment
+   └─ Dashboard import
 
 4. VALIDATION (Validation Agent)
-   ├─ Vérification nodes/pods
-   ├─ Test endpoints
+   ├─ Nodes/pods verification
+   ├─ Endpoint testing
    └─ Health score
 
 5. DOCUMENTATION (Documentation Agent)
-   ├─ Génération README
-   ├─ Génération Runbook
-   └─ Export configurations
+   ├─ README generation
+   ├─ Runbook generation
+   └─ Configuration export
 ```
 
 ---
 
-## 🤖 Les Agents en Détail
+## 🤖 Agents in Detail
 
 ### 1. Orchestrator Agent
 
-**Rôle** : Chef d'orchestre
+**Role**: Conductor
 
-**Responsabilités** :
-- Coordonner tous les agents
-- Gérer le workflow global
-- Décider des actions en cas d'erreur
-- Générer le rapport final
+**Responsibilities**:
+- Coordinate all agents
+- Manage global workflow
+- Decide error handling actions
+- Generate final report
 
-📖 Lire : [AGENTS.md#orchestrator](AGENTS.md)
+📖 Read: [AGENTS.md#orchestrator](AGENTS.md)
 
 ### 2. Planner Agent
 
-**Rôle** : Architecte intelligent
+**Role**: Intelligent Architect
 
-**Responsabilités** :
-- Analyser les besoins utilisateur
-- **Optimiser via IA** la configuration
-- Générer le plan d'exécution
-- Estimer ressources et temps
+**Responsibilities**:
+- Analyze user requirements
+- **AI-optimize** configuration
+- Generate execution plan
+- Estimate resources and time
 
-**IA Usage** : Optimisation selon best practices K8s
+**AI Usage**: Optimization following K8s best practices
 
-📖 Lire : [AGENTS.md#planner](AGENTS.md)
+📖 Read: [AGENTS.md#planner](AGENTS.md)
 
 ### 3. Infrastructure Agent
 
-**Rôle** : Provisionneur
+**Role**: Provisioner
 
-**Responsabilités** :
-- Générer code Terraform idiomatique
-- Exécuter Terraform (init/plan/apply)
-- Gérer le kubeconfig
-- Récupérer les outputs
+**Responsibilities**:
+- Generate idiomatic Terraform code
+- Execute Terraform (init/plan/apply)
+- Manage kubeconfig
+- Retrieve outputs
 
-**Plateformes** : K3s, EKS, AKS (GKE à venir)
+**Platforms**: K3s, EKS, AKS (GKE coming soon)
 
-📖 Lire : [AGENTS.md#infrastructure](AGENTS.md)
+📖 Read: [AGENTS.md#infrastructure](AGENTS.md)
 
 ### 4. Monitoring Agent
 
-**Rôle** : Observabilité
+**Role**: Observability
 
-**Responsabilités** :
-- Déployer Prometheus Operator
-- Configurer Grafana
-- Importer 5+ dashboards
-- Configurer les alertes
+**Responsibilities**:
+- Deploy Prometheus Operator
+- Configure Grafana
+- Import 5+ dashboards
+- Configure alerts
 
-**Stack** : Prometheus + Grafana + ServiceMonitors
+**Stack**: Prometheus + Grafana + ServiceMonitors
 
-📖 Lire : [AGENTS.md#monitoring](AGENTS.md)
+📖 Read: [AGENTS.md#monitoring](AGENTS.md)
 
 ### 5. Validation Agent
 
-**Rôle** : Quality Assurance
+**Role**: Quality Assurance
 
-**Responsabilités** :
-- Vérifier santé des nodes
-- Valider les pods système
-- Tester les endpoints monitoring
-- Calculer health score (0-100)
+**Responsibilities**:
+- Verify node health
+- Validate system pods
+- Test monitoring endpoints
+- Calculate health score (0-100)
 
-**Output** : Rapport de santé détaillé
+**Output**: Detailed health report
 
-📖 Lire : [AGENTS.md#validation](AGENTS.md)
+📖 Read: [AGENTS.md#validation](AGENTS.md)
 
 ### 6. Documentation Agent
 
-**Rôle** : Documentaliste automatique
+**Role**: Automatic Documentalist
 
-**Responsabilités** :
-- Générer README complet
-- Créer ARCHITECTURE.md
-- Créer RUNBOOK.md opérationnel
-- Créer guide TROUBLESHOOTING
-- Générer diagrammes ASCII
+**Responsibilities**:
+- Generate complete README
+- Create ARCHITECTURE.md
+- Create operational RUNBOOK.md
+- Create TROUBLESHOOTING guide
+- Generate ASCII diagrams
 
-**Output** : Documentation prête à l'emploi
+**Output**: Ready-to-use documentation
 
-📖 Lire : [AGENTS.md#documentation](AGENTS.md)
+📖 Read: [AGENTS.md#documentation](AGENTS.md)
 
 ---
 
 ## ⚙️ Configuration
 
-### Providers LLM Supportés
+### Supported LLM Providers
 
-| Provider   | Type    | Coût    | Performance | Privacy |
+| Provider   | Type    | Cost    | Performance | Privacy |
 |------------|---------|---------|-------------|---------|
-| OpenAI     | Cloud   | Payant  | ⭐⭐⭐⭐⭐        | ⭐⭐       |
-| Anthropic  | Cloud   | Payant  | ⭐⭐⭐⭐⭐        | ⭐⭐⭐      |
-| Ollama     | Local   | Gratuit | ⭐⭐⭐         | ⭐⭐⭐⭐⭐     |
+| OpenAI     | Cloud   | Paid    | ⭐⭐⭐⭐⭐        | ⭐⭐       |
+| Anthropic  | Cloud   | Paid    | ⭐⭐⭐⭐⭐        | ⭐⭐⭐      |
+| Ollama     | Local   | Free    | ⭐⭐⭐         | ⭐⭐⭐⭐⭐     |
 
-📖 Lire : [CONFIGURATION.md#llm-provider](CONFIGURATION.md)
+📖 Read: [CONFIGURATION.md#llm-provider](CONFIGURATION.md)
 
-### Plateformes Kubernetes
+### Kubernetes Platforms
 
-| Platform | Type    | Usage       | Temps Deploy |
+| Platform | Type    | Usage       | Deploy Time  |
 |----------|---------|-------------|--------------|
 | K3s      | Local   | Dev/Test    | ~5 min       |
 | EKS      | AWS     | Production  | ~15-20 min   |
 | AKS      | Azure   | Production  | ~10-15 min   |
 | GKE      | Google  | Coming soon | TBD          |
 
-📖 Lire : [CONFIGURATION.md#platforms](CONFIGURATION.md)
+📖 Read: [CONFIGURATION.md#platforms](CONFIGURATION.md)
 
 ### State Management
 
@@ -282,7 +282,7 @@ Chaque agent :
 | PostgreSQL | Production/Team | ✅              |
 | File       | Debug           | ❌              |
 
-📖 Lire : [CONFIGURATION.md#state-management](CONFIGURATION.md)
+📖 Read: [CONFIGURATION.md#state-management](CONFIGURATION.md)
 
 ---
 
@@ -290,88 +290,88 @@ Chaque agent :
 
 ### Prometheus
 
-**Métriques collectées** :
+**Collected metrics**:
 - Kubernetes cluster metrics
 - Node metrics (CPU, Memory, Disk, Network)
 - Pod metrics
 - Container metrics
 - Custom app metrics (via ServiceMonitors)
 
-**Accès** : http://localhost:9090
+**Access**: http://localhost:9090
 
 ### Grafana
 
-**Dashboards pré-configurés** :
+**Pre-configured dashboards**:
 1. Kubernetes Cluster Monitoring
 2. Node Exporter Full
 3. Prometheus Stats
 4. Pod Monitoring
 5. Namespace Resources
 
-**Accès** : http://localhost:3000 (admin/admin)
+**Access**: http://localhost:3000 (admin/admin)
 
-📖 Lire : [AGENTS.md#monitoring-agent](AGENTS.md)
+📖 Read: [AGENTS.md#monitoring-agent](AGENTS.md)
 
 ---
 
-## 🔒 Sécurité
+## 🔒 Security
 
-### Best Practices Appliquées
+### Applied Best Practices
 
-✅ **RBAC** activé par défaut
+✅ **RBAC** enabled by default
 ✅ **Network Policies** (prod)
 ✅ **Pod Security Standards** (prod)
-✅ **Secrets** gérés de manière sécurisée
-✅ **Kubeconfig** avec permissions 600
-✅ **State** chiffré (PostgreSQL)
+✅ **Secrets** managed securely
+✅ **Kubeconfig** with 600 permissions
+✅ **State** encrypted (PostgreSQL)
 ✅ **Audit logging** (prod)
 
-📖 Lire : [CONFIGURATION.md#security](CONFIGURATION.md)
+📖 Read: [CONFIGURATION.md#security](CONFIGURATION.md)
 
 ---
 
-## 🚦 Statuts et Erreurs
+## 🚦 Statuses and Errors
 
 ### Workflow Statuses
 
-- `PENDING` - Initialisé
-- `PLANNING` - En planification
-- `PROVISIONING` - Provisioning en cours
-- `CONFIGURING` - Configuration monitoring
+- `PENDING` - Initialized
+- `PLANNING` - Planning in progress
+- `PROVISIONING` - Provisioning in progress
+- `CONFIGURING` - Monitoring configuration
 - `VALIDATING` - Validation
-- `DOCUMENTING` - Génération doc
-- `COMPLETED` - ✅ Terminé
-- `FAILED` - ❌ Échec
-- `ROLLED_BACK` - Rollback effectué
+- `DOCUMENTING` - Documentation generation
+- `COMPLETED` - ✅ Finished
+- `FAILED` - ❌ Failed
+- `ROLLED_BACK` - Rollback completed
 
-### Gestion des Erreurs
+### Error Handling
 
-**Agents critiques** (Planner, Infrastructure) :
-- Échec → Arrêt du workflow
-- Rollback automatique possible
+**Critical agents** (Planner, Infrastructure):
+- Failure → Workflow stop
+- Automatic rollback possible
 
-**Agents non-critiques** (Monitoring, Documentation) :
-- Échec → Warning + continuation
-- Workflow peut se terminer
+**Non-critical agents** (Monitoring, Documentation):
+- Failure → Warning + continuation
+- Workflow can complete
 
-📖 Lire : [ARCHITECTURE.md#error-handling](ARCHITECTURE.md)
+📖 Read: [ARCHITECTURE.md#error-handling](ARCHITECTURE.md)
 
 ---
 
-## 📈 Métriques de Performance
+## 📈 Performance Metrics
 
-### KPIs Système
+### System KPIs
 
-- **Time to Cluster** : < 10 min (K3s), < 20 min (EKS/AKS)
-- **Success Rate** : > 95%
-- **Monitoring Coverage** : 100% composants critiques
-- **Documentation** : 100% automatique et à jour
+- **Time to Cluster**: < 10 min (K3s), < 20 min (EKS/AKS)
+- **Success Rate**: > 95%
+- **Monitoring Coverage**: 100% critical components
+- **Documentation**: 100% automatic and up-to-date
 
-### Optimisations
+### Optimizations
 
-✅ Exécution parallèle des agents indépendants
-✅ Caching Terraform
-✅ Images Docker pré-pullées
+✅ Parallel execution of independent agents
+✅ Terraform caching
+✅ Pre-pulled Docker images
 ✅ Incremental updates
 
 ---
@@ -414,22 +414,22 @@ Chaque agent :
 | [CONFIGURATION.md](CONFIGURATION.md) | Options de config |
 | [CONTRIBUTING.md](../CONTRIBUTING.md) | Guide contribution |
 
-### Problèmes Courants
+### Common Issues
 
-**LLM ne répond pas** → [QUICKSTART.md#troubleshooting](QUICKSTART.md)
+**LLM not responding** → [QUICKSTART.md#troubleshooting](QUICKSTART.md)
 **Terraform errors** → [QUICKSTART.md#troubleshooting](QUICKSTART.md)
-**Ports occupés** → [QUICKSTART.md#troubleshooting](QUICKSTART.md)
+**Ports occupied** → [QUICKSTART.md#troubleshooting](QUICKSTART.md)
 
 ### Debug
 
 ```bash
-# Activer logs détaillés
+# Enable detailed logs
 DEBUG=true python main.py ...
 
-# Logs Terraform
+# Terraform logs
 TF_LOG=DEBUG python main.py ...
 
-# État du système
+# System status
 python main.py status <workflow-id>
 ```
 
@@ -437,18 +437,18 @@ python main.py status <workflow-id>
 
 ## 📞 Contact
 
-- **Issues** : GitHub Issues
-- **Discussions** : GitHub Discussions
-- **Email** : (À définir)
+- **Issues**: GitHub Issues
+- **Discussions**: GitHub Discussions
+- **Email**: (To be defined)
 
 ---
 
 ## 📜 License
 
-MIT License - voir [LICENSE](../LICENSE)
+MIT License - see [LICENSE](../LICENSE)
 
 ---
 
-**Créé avec ❤️ et 🤖 par des Agents IA**
+**Created with ❤️ and 🤖 by AI Agents**
 
-*Documentation générée pour Terraform K8s Agent v0.1.0*
+*Documentation generated for Terraform K8s Agent v0.1.0*

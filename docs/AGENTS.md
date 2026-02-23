@@ -1,50 +1,50 @@
-# Documentation des Agents
+# Agent Documentation
 
-## 🤖 Vue d'Ensemble
+## 🤖 Overview
 
-Ce document détaille le rôle et le fonctionnement de chaque agent du système.
+This document details the role and operation of each agent in the system.
 
 ## 📋 Orchestrator Agent
 
-### Responsabilités
+### Responsibilities
 
-- **Coordination** : Orchestre l'exécution de tous les agents
-- **Workflow** : Gère le flux d'exécution
-- **État** : Maintient l'état global
-- **Erreurs** : Décide des actions en cas d'échec
-- **Reporting** : Génère le rapport final
+- **Coordination**: Orchestrates execution of all agents
+- **Workflow**: Manages execution flow
+- **State**: Maintains global state
+- **Errors**: Decides actions on failure
+- **Reporting**: Generates final report
 
-### Workflow d'Exécution
+### Execution Workflow
 
 ```python
 def execute(self, agent_input: AgentInput) -> AgentOutput:
-    # 1. Initialisation
+    # 1. Initialization
     display_banner()
     
-    # 2. Exécution séquentielle des agents
+    # 2. Sequential agent execution
     for agent_name, description in workflow_steps:
-        # 2.1 Préparer l'input
+        # 2.1 Prepare input
         step_input = prepare_input(previous_outputs)
         
-        # 2.2 Mettre à jour le statut
+        # 2.2 Update status
         update_workflow_status(step_name)
         
-        # 2.3 Exécuter l'agent
+        # 2.3 Execute agent
         result = agent.run(step_input)
         
-        # 2.4 Vérifier le résultat
+        # 2.4 Check result
         if not result.success and is_critical:
-            break  # Arrêt si agent critique échoue
+            break  # Stop if critical agent fails
     
-    # 3. Générer le résumé
+    # 3. Generate summary
     display_summary(outputs, errors)
     
     return final_output
 ```
 
-### Décisions Critiques
+### Critical Decisions
 
-L'orchestrateur détermine quels agents sont critiques :
+The orchestrator determines which agents are critical:
 
 ```python
 def _is_critical_agent(self, agent_name: str) -> bool:
@@ -52,31 +52,31 @@ def _is_critical_agent(self, agent_name: str) -> bool:
     return agent_name in critical_agents
 ```
 
-- **Critiques** : Planner, Infrastructure → Échec = Arrêt
-- **Non-critiques** : Monitoring, Documentation → Échec = Warning
+- **Critical**: Planner, Infrastructure → Failure = Stop
+- **Non-critical**: Monitoring, Documentation → Failure = Warning
 
-### Interface Utilisateur
+### User Interface
 
-L'orchestrateur gère l'affichage Rich console :
-- Banner de démarrage
+The orchestrator manages Rich console display:
+- Startup banner
 - Progress bars
-- Table de résumé
-- Accès finaux (URLs)
+- Summary table
+- Final access (URLs)
 
 ---
 
 ## 📊 Planner Agent
 
-### Responsabilités
+### Responsibilities
 
-- **Analyse** : Comprendre les requirements utilisateur
-- **Optimisation** : Utiliser l'IA pour optimiser la config
-- **Planification** : Générer un plan d'exécution détaillé
-- **Estimation** : Calculer ressources et temps nécessaires
+- **Analysis**: Understand user requirements
+- **Optimization**: Use AI to optimize configuration
+- **Planning**: Generate detailed execution plan
+- **Estimation**: Calculate required resources and time
 
-### Intelligence Artificielle
+### Artificial Intelligence
 
-Le Planner utilise l'IA pour optimiser la configuration :
+The Planner uses AI to optimize configuration:
 
 ```python
 def _optimize_configuration(self, context: Dict) -> Dict:
@@ -100,19 +100,19 @@ def _optimize_configuration(self, context: Dict) -> Dict:
     return json.loads(response)
 ```
 
-### Configuration par Environnement
+### Configuration by Environment
 
-Le Planner adapte la config selon l'environnement :
+The Planner adapts config based on environment:
 
-| Environnement | Nodes Min | Instance Type | Disk | HA |
-|---------------|-----------|---------------|------|-----|
-| Development   | 1         | t3.medium     | 50GB | No  |
-| Staging       | 2         | t3.large      | 100GB| Partial |
-| Production    | 3+        | t3.xlarge     | 200GB| Yes |
+| Environment   | Min Nodes | Instance Type | Disk  | HA      |
+|---------------|-----------|---------------|-------|---------|
+| Development   | 1         | t3.medium     | 50GB  | No      |
+| Staging       | 2         | t3.large      | 100GB | Partial |
+| Production    | 3+        | t3.xlarge     | 200GB | Yes     |
 
-### Plan d'Exécution
+### Execution Plan
 
-Structure du plan généré :
+Structure of generated plan:
 
 ```python
 {
@@ -130,7 +130,7 @@ Structure du plan généré :
             ],
             "estimated_time": 5  # minutes
         },
-        # ... autres steps
+        # ... other steps
     ],
     "total_steps": 4
 }
@@ -138,28 +138,28 @@ Structure du plan généré :
 
 ### Validation
 
-Le Planner valide le plan avant exécution :
+The Planner validates the plan before execution:
 
-- ✅ Plan a des étapes
-- ✅ Chaque étape a des tâches
-- ✅ Estimations cohérentes
-- ⚠️ Warnings pour configurations sous-optimales
+- ✅ Plan has steps
+- ✅ Each step has tasks
+- ✅ Consistent estimations
+- ⚠️ Warnings for sub-optimal configurations
 
 ---
 
 ## 🏗️ Infrastructure Agent
 
-### Responsabilités
+### Responsibilities
 
-- **Génération** : Créer le code Terraform
-- **Initialisation** : `terraform init`
-- **Planification** : `terraform plan`
-- **Application** : `terraform apply`
-- **Outputs** : Récupérer les informations du cluster
+- **Generation**: Create Terraform code
+- **Initialization**: `terraform init`
+- **Planning**: `terraform plan`
+- **Application**: `terraform apply`
+- **Outputs**: Retrieve cluster information
 
-### Génération Terraform
+### Terraform Generation
 
-Le code Terraform est généré dynamiquement :
+Terraform code is generated dynamically:
 
 ```python
 def _generate_terraform_files(self, workspace, platform, config):
@@ -176,7 +176,7 @@ def _generate_terraform_files(self, workspace, platform, config):
     outputs_tf = self._generate_outputs_tf(platform)
 ```
 
-### Adaptation par Plateforme
+### Platform Adaptation
 
 #### K3s (Local/VMs)
 
@@ -218,25 +218,25 @@ resource "azurerm_kubernetes_cluster" "aks" {
 def _save_kubeconfig(self, workflow_id: str, content: str) -> str:
     kubeconfig_path = output_dir / "kubeconfigs" / f"{workflow_id}.kubeconfig"
     kubeconfig_path.write_text(content)
-    kubeconfig_path.chmod(0o600)  # Sécurité
+    kubeconfig_path.chmod(0o600)  # Security
     return str(kubeconfig_path)
 ```
 
 ### Error Handling
 
-L'agent Infrastructure gère les erreurs Terraform :
+The Infrastructure agent handles Terraform errors:
 
 ```python
 return_code, stdout, stderr = tf.apply()
 
 if return_code != 0:
-    # Parse l'erreur Terraform
+    # Parse Terraform error
     error_msg = parse_terraform_error(stderr)
     
     # Log
     self.log_error(f"Terraform failed: {error_msg}")
     
-    # Décide de la suite
+    # Decide next action
     if should_rollback:
         terraform_destroy()
 ```
@@ -245,15 +245,15 @@ if return_code != 0:
 
 ## 📈 Monitoring Agent
 
-### Responsabilités
+### Responsibilities
 
-- **Prometheus** : Déployer et configurer Prometheus Operator
-- **Grafana** : Déployer Grafana avec datasources
-- **Dashboards** : Importer les dashboards pré-configurés
-- **Alertes** : Configurer les règles d'alerte
-- **ServiceMonitors** : Créer les ServiceMonitors
+- **Prometheus**: Deploy and configure Prometheus Operator
+- **Grafana**: Deploy Grafana with datasources
+- **Dashboards**: Import pre-configured dashboards
+- **Alerts**: Configure alert rules
+- **ServiceMonitors**: Create ServiceMonitors
 
-### Stack Monitoring
+### Monitoring Stack
 
 ```
 Grafana (Visualization)
@@ -265,9 +265,9 @@ ServiceMonitors (Targets)
 Applications/Infrastructure
 ```
 
-### Manifests Kubernetes
+### Kubernetes Manifests
 
-L'agent génère les manifests K8s :
+The agent generates K8s manifests:
 
 ```python
 def _generate_monitoring_manifests(self, workflow_id, config):
@@ -284,38 +284,38 @@ def _generate_monitoring_manifests(self, workflow_id, config):
     service_monitors = self._generate_service_monitors()
 ```
 
-### Dashboards Pré-configurés
+### Pre-configured Dashboards
 
-Dashboards automatiquement importés :
+Automatically imported dashboards:
 
 1. **Kubernetes Cluster Monitoring**
-   - Vue d'ensemble du cluster
-   - CPU/Memory par node
+   - Cluster overview
+   - CPU/Memory per node
    - Pods status
 
 2. **Node Exporter Full**
-   - Métriques système détaillées
+   - Detailed system metrics
    - Disk I/O
    - Network traffic
 
 3. **Prometheus Stats**
-   - Métriques Prometheus lui-même
+   - Prometheus metrics itself
    - Scrape duration
    - Rule evaluation
 
 4. **Pod Monitoring**
-   - Métriques par pod
+   - Metrics per pod
    - Restart count
    - Resource usage
 
 5. **Namespace Resources**
-   - Vue par namespace
+   - View per namespace
    - Quotas
    - Limits vs requests
 
-### Configuration des Alertes
+### Alert Configuration
 
-Si `alerting: true` dans la config :
+If `alerting: true` in config:
 
 ```yaml
 groups:
@@ -335,15 +335,15 @@ groups:
 
 ## ✅ Validation Agent
 
-### Responsabilités
+### Responsibilities
 
-- **Nodes** : Vérifier que tous les nœuds sont Ready
-- **Pods** : Vérifier que les pods système fonctionnent
-- **Monitoring** : Tester les endpoints Prometheus/Grafana
-- **Networking** : Valider la configuration réseau
-- **Health Score** : Calculer un score de santé global
+- **Nodes**: Verify all nodes are Ready
+- **Pods**: Verify system pods are running
+- **Monitoring**: Test Prometheus/Grafana endpoints
+- **Networking**: Validate network configuration
+- **Health Score**: Calculate global health score
 
-### Checks Effectués
+### Performed Checks
 
 #### 1. Node Status
 
@@ -405,7 +405,7 @@ def _check_networking(self, kubeconfig_path: str) -> Dict:
 
 ### Health Score
 
-Calcul du score de santé (0-100) :
+Health score calculation (0-100):
 
 ```python
 def _calculate_health_score(self, health_report: Dict) -> int:
@@ -415,12 +415,12 @@ def _calculate_health_score(self, health_report: Dict) -> int:
     return int((passed / total) * 100)
 ```
 
-Statut selon le score :
-- **90-100** : Excellent ✅
-- **80-89** : Bon ⚠️
-- **< 80** : Problèmes ❌
+Status by score:
+- **90-100**: Excellent ✅
+- **80-89**: Good ⚠️
+- **< 80**: Issues ❌
 
-### Rapport de Santé
+### Health Report
 
 ```python
 health_report = {
@@ -439,66 +439,66 @@ health_report = {
 
 ## 📚 Documentation Agent
 
-### Responsabilités
+### Responsibilities
 
-- **README** : Document principal avec infos d'accès
-- **Architecture** : Documentation d'architecture détaillée
-- **Runbook** : Procédures opérationnelles
-- **Troubleshooting** : Guide de dépannage
-- **Configs** : Export des configurations
-- **Diagrammes** : Schémas ASCII de l'architecture
+- **README**: Main document with access info
+- **Architecture**: Detailed architecture documentation
+- **Runbook**: Operational procedures
+- **Troubleshooting**: Troubleshooting guide
+- **Configs**: Configuration export
+- **Diagrams**: ASCII architecture diagrams
 
-### Documents Générés
+### Generated Documents
 
 #### 1. README.md
 
-Contient :
-- Informations générales du cluster
-- Architecture déployée
-- Accès (Kubeconfig, Grafana, Prometheus)
-- État du cluster
-- Commandes utiles
-- Procédure de destruction
+Contains:
+- General cluster information
+- Deployed architecture
+- Access (Kubeconfig, Grafana, Prometheus)
+- Cluster state
+- Useful commands
+- Destroy procedure
 
 #### 2. ARCHITECTURE.md
 
-Documente :
-- Configuration infrastructure
-- Configuration réseau
-- Stack monitoring
-- Sécurité (RBAC, Network Policies)
-- Addons installés
+Documents:
+- Infrastructure configuration
+- Network configuration
+- Monitoring stack
+- Security (RBAC, Network Policies)
+- Installed addons
 
 #### 3. RUNBOOK.md
 
-Procédures pour :
-- Monitoring quotidien
-- Métriques à surveiller
-- Procédures d'urgence (node down, pod crash, etc.)
-- Opérations de maintenance
+Procedures for:
+- Daily monitoring
+- Metrics to watch
+- Emergency procedures (node down, pod crash, etc.)
+- Maintenance operations
 - Scaling
 - Backups
 
 #### 4. TROUBLESHOOTING.md
 
-Guide de dépannage :
-- Problèmes courants
-- Commandes de diagnostic
-- Solutions step-by-step
-- Contacts et escalade
+Troubleshooting guide:
+- Common issues
+- Diagnostic commands
+- Step-by-step solutions
+- Contacts and escalation
 
-#### 5. Configurations Exportées
+#### 5. Exported Configurations
 
 ```
 configs/
-├── cluster-config.json      # Config complète
-├── terraform-info.json      # Infos Terraform
-└── metadata.json            # Metadata du workflow
+├── cluster-config.json      # Complete config
+├── terraform-info.json      # Terraform info
+└── metadata.json            # Workflow metadata
 ```
 
-### Diagramme ASCII
+### ASCII Diagram
 
-L'agent génère un diagramme d'architecture :
+The agent generates an architecture diagram:
 
 ```
 ╔════════════════════════════════════════╗
@@ -521,27 +521,27 @@ L'agent génère un diagramme d'architecture :
 
 ---
 
-## 🔄 Cycle de Vie d'un Agent
+## 🔄 Agent Lifecycle
 
-### 1. Initialisation
+### 1. Initialization
 
 ```python
 agent = MyAgent(config, state_manager, llm)
 ```
 
-### 2. Enregistrement
+### 2. Registration
 
 ```python
 orchestrator.register_agent("myagent", agent)
 ```
 
-### 3. Exécution
+### 3. Execution
 
 ```python
-# L'orchestrateur appelle
+# The orchestrator calls
 result = agent.run(agent_input)
 
-# Qui wrapper execute()
+# Which wraps execute()
 def run(self, input):
     # Log start
     # Create execution record
@@ -551,7 +551,7 @@ def run(self, input):
     # Update execution record
 ```
 
-### 4. Implémentation de execute()
+### 4. Implementing execute()
 
 ```python
 def execute(self, agent_input: AgentInput) -> AgentOutput:
@@ -559,11 +559,11 @@ def execute(self, agent_input: AgentInput) -> AgentOutput:
     errors = []
     
     try:
-        # 1. Récupérer le contexte
+        # 1. Get context
         context = agent_input.context
         previous_outputs = agent_input.previous_outputs
         
-        # 2. Logique métier
+        # 2. Business logic
         result = do_work(context)
         
         # 3. Logs
@@ -589,4 +589,4 @@ def execute(self, agent_input: AgentInput) -> AgentOutput:
 
 ---
 
-**Next**: Voir [CONFIGURATION.md](CONFIGURATION.md) pour les options de configuration
+**Next**: See [CONFIGURATION.md](CONFIGURATION.md) for configuration options

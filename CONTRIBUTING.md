@@ -1,47 +1,47 @@
 # CONTRIBUTING.md
 
-## 🤝 Contribution au Projet
+## 🤝 Contributing to the Project
 
-Merci de votre intérêt pour contribuer à Terraform K8s Agent!
+Thank you for your interest in contributing to Terraform K8s Agent!
 
-## 📋 Comment Contribuer
+## 📋 How to Contribute
 
 ### 1. Fork & Clone
 
 ```bash
-# Fork sur GitHub puis clone
+# Fork on GitHub then clone
 git clone https://github.com/YOUR_USERNAME/terraform-k8s-agent.git
 cd terraform-k8s-agent
 ```
 
-### 2. Créer une Branche
+### 2. Create a Branch
 
 ```bash
-git checkout -b feature/ma-nouvelle-feature
-# ou
-git checkout -b fix/mon-bug-fix
+git checkout -b feature/my-new-feature
+# or
+git checkout -b fix/my-bug-fix
 ```
 
-### 3. Développer
+### 3. Develop
 
 ```bash
-# Installer les dépendances de dev
+# Install dev dependencies
 pip install -r requirements.txt
 
-# Activer pre-commit
+# Enable pre-commit
 pre-commit install
 
-# Faire vos modifications
+# Make your changes
 # ...
 ```
 
 ### 4. Tests
 
 ```bash
-# Lancer les tests
+# Run tests
 pytest
 
-# Avec coverage
+# With coverage
 pytest --cov=. --cov-report=html
 
 # Linting
@@ -54,16 +54,16 @@ mypy .
 
 ```bash
 git add .
-git commit -m "feat: ajout de la fonctionnalité X"
-# ou
-git commit -m "fix: correction du bug Y"
+git commit -m "feat: add feature X"
+# or
+git commit -m "fix: fix bug Y"
 ```
 
-**Convention de commits** :
-- `feat:` Nouvelle fonctionnalité
-- `fix:` Correction de bug
+**Commit convention**:
+- `feat:` New feature
+- `fix:` Bug fix
 - `docs:` Documentation
-- `style:` Formatage
+- `style:` Formatting
 - `refactor:` Refactoring
 - `test:` Tests
 - `chore:` Maintenance
@@ -71,16 +71,16 @@ git commit -m "fix: correction du bug Y"
 ### 6. Push & Pull Request
 
 ```bash
-git push origin feature/ma-nouvelle-feature
+git push origin feature/my-new-feature
 ```
 
-Puis créer une Pull Request sur GitHub.
+Then create a Pull Request on GitHub.
 
-## 🎯 Que Contribuer?
+## 🎯 What to Contribute?
 
-### Nouveaux Agents
+### New Agents
 
-Créer un agent pour une nouvelle fonctionnalité :
+Create an agent for a new functionality:
 
 ```python
 # agents/my_new_agent.py
@@ -88,7 +88,7 @@ from core.agent_base import AgentInput, AgentOutput, BaseAgent
 
 class MyNewAgent(BaseAgent):
     def execute(self, agent_input: AgentInput) -> AgentOutput:
-        # Votre logique
+        # Your logic
         return AgentOutput(
             agent_name=self.agent_name,
             success=True,
@@ -96,52 +96,52 @@ class MyNewAgent(BaseAgent):
         )
 ```
 
-### Nouveaux Providers Cloud
+### New Cloud Providers
 
 - GKE (Google Cloud)
 - DigitalOcean Kubernetes
 - Linode Kubernetes Engine
 
-### Nouveaux Modules Terraform
+### New Terraform Modules
 
-Améliorer les modules existants ou en créer de nouveaux.
+Improve existing modules or create new ones.
 
 ### Documentation
 
-- Tutoriels
-- Guides d'intégration
-- Traductions
-- Exemples
+- Tutorials
+- Integration guides
+- Translations
+- Examples
 
 ### Tests
 
-- Tests unitaires
-- Tests d'intégration
-- Tests end-to-end
+- Unit tests
+- Integration tests
+- End-to-end tests
 
 ## 🏗️ Architecture
 
-Lire [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) pour comprendre le système.
+Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) to understand the system.
 
-## 📝 Style de Code
+## 📝 Code Style
 
 ### Python
 
 ```python
-# Suivre PEP 8
-# Utiliser Black pour le formatage
-# Utiliser Ruff pour le linting
-# Type hints obligatoires
+# Follow PEP 8
+# Use Black for formatting
+# Use Ruff for linting
+# Type hints mandatory
 
 def my_function(param: str) -> Dict[str, Any]:
     """
-    Description de la fonction
+    Function description
     
     Args:
-        param: Description du paramètre
+        param: Parameter description
         
     Returns:
-        Dict: Description du retour
+        Dict: Return description
     """
     return {"key": "value"}
 ```
@@ -149,9 +149,9 @@ def my_function(param: str) -> Dict[str, Any]:
 ### Terraform
 
 ```hcl
-# Formatage avec terraform fmt
-# Variables documentées
-# Outputs exposés
+# Format with terraform fmt
+# Document variables
+# Expose outputs
 
 variable "cluster_name" {
   description = "Name of the cluster"
@@ -162,7 +162,7 @@ variable "cluster_name" {
 
 ## 🧪 Tests
 
-### Tests Unitaires
+### Unit Tests
 
 ```python
 # tests/test_my_agent.py
@@ -175,7 +175,7 @@ def test_my_agent_execute():
     assert result.success
 ```
 
-### Tests d'Intégration
+### Integration Tests
 
 ```python
 # tests/test_integration.py
@@ -187,38 +187,38 @@ def test_full_workflow():
 
 ## 📖 Documentation
 
-- Commenter le code complexe
-- Docstrings pour toutes les fonctions/classes
-- README à jour
-- Changelog maintenu
+- Comment complex code
+- Docstrings for all functions/classes
+- Keep README up-to-date
+- Maintain changelog
 
-## 🐛 Reporter un Bug
+## 🐛 Report a Bug
 
-Créer une issue avec :
-- Description détaillée
+Create an issue with:
+- Detailed description
 - Steps to reproduce
 - Expected behavior
 - Actual behavior
 - Environment (OS, Python version, etc.)
 - Logs
 
-## 💡 Proposer une Feature
+## 💡 Propose a Feature
 
-Créer une issue "Feature Request" avec :
-- Description de la feature
+Create a "Feature Request" issue with:
+- Feature description
 - Use case
-- Proposition d'implémentation (optionnel)
+- Implementation proposal (optional)
 
 ## 📞 Questions?
 
 - GitHub Discussions
-- GitHub Issues (pour les bugs)
-- Documentation dans `docs/`
+- GitHub Issues (for bugs)
+- Documentation in `docs/`
 
 ## 📜 License
 
-En contribuant, vous acceptez que vos contributions soient sous license MIT.
+By contributing, you agree that your contributions will be licensed under the MIT License.
 
 ---
 
-**Merci pour votre contribution!** 🎉
+**Thank you for your contribution!** 🎉

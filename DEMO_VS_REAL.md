@@ -1,92 +1,92 @@
-# Guide : Mode Démo vs Déploiement Réel
+# Guide: Demo Mode vs Real Deployment
 
-## 📺 Mode Démo (Par défaut)
+## 📺 Demo Mode (Default)
 
-**Caractéristiques :**
-- ⚡ Ultra rapide (2-3 secondes)
-- 🎭 Simule tous les déploiements
-- ✅ Parfait pour tester l'orchestration
-- 📝 Génère la structure Terraform
-- 💡 Idéal pour comprendre le système
+**Characteristics:**
+- ⚡ Ultra fast (2-3 seconds)
+- 🎭 Simulates all deployments
+- ✅ Perfect for testing orchestration
+- 📝 Generates Terraform structure
+- 💡 Ideal for understanding the system
 
-**Utilisation :**
+**Usage:**
 ```bash
 # CLI
 python main.py create -p k3s -n 3
 
-# Interactif (choisir option 1 "Démo rapide")
+# Interactive (choose option 1 "Quick demo")
 python main.py interactive
 ```
 
-**Ce qui est simulé :**
-- Installation K3s → Simple echo
-- Déploiement Prometheus/Grafana → Logs simulés
-- Validation cluster → Données fictives (toujours 100/100)
+**What is simulated:**
+- K3s installation → Simple echo
+- Prometheus/Grafana deployment → Simulated logs
+- Cluster validation → Fake data (always 100/100)
 
 ---
 
-## 🚀 Mode Déploiement Réel
+## 🚀 Real Deployment Mode
 
-**Caractéristiques :**
-- ⏱️ Plus lent (2-5 minutes)
-- 🔧 Installe vraiment K3s sur votre machine
-- 📊 Déploie vraiment Prometheus/Grafana
-- ✅ Validations avec de vraies métriques
+**Characteristics:**
+- ⏱️ Slower (2-5 minutes)
+- 🔧 Actually installs K3s on your machine
+- 📊 Actually deploys Prometheus/Grafana
+- ✅ Validations with real metrics
 - 🎯 Production-ready
 
-**Prérequis :**
+**Prerequisites:**
 ```bash
-# Vérifier les prérequis
-which curl     # Doit être installé
-which kubectl  # Doit être installé
-sudo -v        # Doit avoir accès sudo
+# Check prerequisites
+which curl     # Must be installed
+which kubectl  # Must be installed
+sudo -v        # Must have sudo access
 
-# Espace disque
-df -h /var     # Minimum 2GB libre
+# Disk space
+df -h /var     # Minimum 2GB free
 ```
 
-**⚠️ Important :**
-- Nécessite **accès sudo** pour installer K3s
-- Télécharge ~500MB de données
-- Modifie votre système (installe K3s)
-- Port 6443 doit être disponible
+**⚠️ Important:**
+- Requires **sudo access** to install K3s
+- Downloads ~500MB of data
+- Modifies your system (installs K3s)
+- Port 6443 must be available
 
-**Utilisation :**
+**Usage:**
 
-### Option 1 : CLI avec flag
+### Option 1: CLI with flag
 ```bash
-# Mode réel avec flag --real ou --real-deployment
+# Real mode with --real or --real-deployment flag
 python main.py create -p k3s -n 1 --real-deployment
 
-# Exemple complet
-python main.py create \\
-  --platform k3s \\
-  --nodes 1 \\
-  --monitoring \\
+# Complete example
+python main.py create \
+  --platform k3s \
+  --nodes 1 \
+  --monitoring \
   --real-deployment
 ```
 
-### Option 2 : Mode interactif
+### Option 2: Interactive mode
 ```bash
 python main.py interactive
 
-# Puis choisir :
-# - Platform : K3s
-# - Environment : development
-# - Nodes : 1 (recommandé pour premier test)
-# - Monitoring : Oui
-# - Mode : 2. 🚀 Déploiement réel (installe vraiment K3s) 👈
+# Then choose:
+# - Platform: K3s
+# - Environment: development
+# - Nodes: 1 (recommended for first test)
+# - Monitoring: Yes
+# - Mode: 2. 🚀 Real deployment (actually installs K3s) 👈
 ```
 
-**Ce qui sera installé en mode réel :**
+**What will be installed in real mode:**
 
 1. **K3s Server** (Control Plane)
    ```bash
    curl -sfL https://get.k3s.io | sh -s -
    ```
-   - Installe K3s dans `/usr/local/bin/`
-   - Crée le service systemd
-   - Configure kubeconfig dans `/etc/rancher/k3s/k3s.yaml`
+   - Installs K3s in `/usr/local/bin/`
+   - Creates systemd service
+   - Configures kubeconfig in `/etc/rancher/k3s/k3s.yaml`
 
 2. **Prometheus Operator**
    ```bash
@@ -100,81 +100,81 @@ python main.py interactive
    ```bash
    kubectl apply -f output/.../monitoring/grafana.yaml
    ```
-   - Déploiement Grafana
-   - Service LoadBalancer
-   - Dashboards pré-configurés
+   - Grafana deployment
+   - LoadBalancer service
+   - Pre-configured dashboards
 
 4. **Validation**
-   - Vraies requêtes kubectl
-   - Score basé sur métriques réelles
-   - Tests de connectivité
+   - Real kubectl requests
+   - Score based on real metrics
+   - Connectivity tests
 
 ---
 
-## 📊 Comparaison
+## 📊 Comparison
 
-| Aspect | Mode Démo | Mode Réel |
+| Aspect | Demo Mode | Real Mode |
 |--------|-----------|-----------|
-| **Durée** | 2-3s | 2-5 min |
-| **Sudo requis** | ❌ Non | ✅ Oui |
-| **Installe K3s** | ❌ Non | ✅ Oui |
-| **Téléchargements** | ~0 MB | ~500 MB |
-| **Validations** | Fictives | Réelles |
-| **Kubeconfig** | Simulé | Fonctionnel |
-| **Monitoring** | Simulé | Opérationnel |
+| **Duration** | 2-3s | 2-5 min |
+| **Sudo required** | ❌ No | ✅ Yes |
+| **Installs K3s** | ❌ No | ✅ Yes |
+| **Downloads** | ~0 MB | ~500 MB |
+| **Validations** | Fake | Real |
+| **Kubeconfig** | Simulated | Functional |
+| **Monitoring** | Simulated | Operational |
 
 ---
 
-## 🧪 Test Rapide du Mode Réel
+## 🧪 Quick Real Mode Test
 
-### Test 1 : Vérifier que tout fonctionne
+### Test 1: Verify everything works
 ```bash
-# 1. Test démo (rapide)
+# 1. Demo test (quick)
 python main.py create -p k3s -n 1 --no-monitoring
 
-# 2. Test réel (patience!)
+# 2. Real test (patience!)
 python main.py create -p k3s -n 1 --no-monitoring --real
 ```
 
-### Après le déploiement réel :
+### After real deployment:
 ```bash
-# Vérifier K3s
+# Check K3s
 sudo systemctl status k3s
 kubectl cluster-info
 
-# Voir les nodes
+# See nodes
 kubectl get nodes
 
-# Voir les pods
+# See pods
 kubectl get pods --all-namespaces
 
-# Utiliser le kubeconfig généré
+# Use generated kubeconfig
 export KUBECONFIG=$(ls -t output/kubeconfigs/*.kubeconfig | head -1)
 kubectl get nodes
 ```
 
-### Test 2 : Avec monitoring complet
+### Test 2: With complete monitoring
 ```bash
-python main.py create \\
-  --platform k3s \\
-  --nodes 1 \\
-  --monitoring \\
+python main.py create \
+  --platform k3s \
+  --nodes 1 \
+  --monitoring \
   --real-deployment
 
-# Après déploiement, accéder à :
-# - Grafana : http://localhost:3000
-# - Prometheus : http://localhost:9090
+# After deployment, access:
+# - Grafana: http://localhost:3000
+# - Prometheus: http://localhost:9090
 ```
 
 ---
 
-## 🧹 Nettoyage après test réel
+## 🧹 Cleanup after real test
 
 ```bash
-# Désinstaller K3s complètement
+# Completely uninstall K3s
 sudo /usr/local/bin/k3s-uninstall.sh
 
-# Nettoyer les fichiers générés
+# Clean generated files
 rm -rf output/terraform/*
 rm -rf output/kubeconfigs/*
 rm -rf output/docs/*
@@ -182,58 +182,58 @@ rm -rf output/docs/*
 
 ---
 
-## 🐛 Dépannage
+## 🐛 Troubleshooting
 
-### Erreur : "K3s installation failed"
+### Error: "K3s installation failed"
 ```bash
-# Vérifier les logs
+# Check logs
 sudo journalctl -u k3s -n 50
 
-# Vérifier l'espace disque
+# Check disk space
 df -h
 
-# Nettoyer et réessayer
+# Clean and retry
 sudo /usr/local/bin/k3s-uninstall.sh
 python main.py create -p k3s -n 1 --real
 ```
 
-### Erreur : "Port 6443 already in use"
+### Error: "Port 6443 already in use"
 ```bash
-# Un autre K3s/K8s tourne déjà
+# Another K3s/K8s is already running
 sudo systemctl stop k3s
-# ou
+# or
 sudo /usr/local/bin/k3s-uninstall.sh
 ```
 
-### Timeout pendant le déploiement
+### Timeout during deployment
 ```bash
-# Le téléchargement peut être lent
-# Augmenter le timeout ou vérifier la connexion
+# Download can be slow
+# Increase timeout or check connection
 curl -I https://get.k3s.io
 ```
 
 ---
 
-## 💡 Recommandations
+## 💡 Recommendations
 
-**Pour apprendre l'architecture :**
-→ Utilisez le **mode démo** (rapide, sans risque)
+**To learn the architecture:**
+→ Use **demo mode** (fast, risk-free)
 
-**Pour tester localement :**
-→ Utilisez le **mode réel avec --no-monitoring** d'abord  
-→ Puis ajoutez `--monitoring` ensuite
+**To test locally:**
+→ Use **real mode with --no-monitoring** first  
+→ Then add `--monitoring` afterwards
 
-**Pour production :**
-→ Utilisez EKS/AKS avec le mode réel
-→ Configurez les alertes et backups
+**For production:**
+→ Use EKS/AKS with real mode
+→ Configure alerts and backups
 
 ---
 
-## 📚 Prochaines Étapes
+## 📚 Next Steps
 
-1. **Tester en démo** : `python main.py interactive` (option 1)
-2. **Tester en réel** : `python main.py create -p k3s -n 1 --real`
-3. **Explorer la doc générée** : `cat output/docs/*/README.md`
-4. **Personnaliser** : Modifier `examples/k3s-local.yaml`
+1. **Test in demo**: `python main.py interactive` (option 1)
+2. **Test in real**: `python main.py create -p k3s -n 1 --real`
+3. **Explore generated docs**: `cat output/docs/*/README.md`
+4. **Customize**: Modify `examples/k3s-local.yaml`
 
-Bon déploiement ! 🚀
+Happy deploying! 🚀
